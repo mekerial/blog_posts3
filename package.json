@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "yarn nodemon --inspect dist/index.js",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "test": "jest"
   },
   "dependencies": {
     "@types/jest": "^29.5.12",
