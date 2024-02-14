@@ -8,7 +8,8 @@ export type CreateUserWithHash = {
     login: string,
     passwordHash: string,
     passwordSalt: string,
-    email: string
+    email: string,
+    createdAt: string
 }
 
 export type QueryUserInputModel = {

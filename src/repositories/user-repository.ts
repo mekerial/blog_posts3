@@ -52,7 +52,6 @@ export class UserRepository {
 
         const user = {
             ...createdData,
-            createdAt: new Date().toISOString(),
         }
 
         const newUser = await userCollection.insertOne({...user})

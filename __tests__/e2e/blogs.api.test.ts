@@ -1,7 +1,12 @@
 import request from 'supertest'
 import {app} from "../../src";
 import {RouterPaths} from "../../src/routes/router-paths";
-import {dataTestBlogCreate01, dataTestBlogCreate02, incorrectInputData} from "../data-for-tests/blog-data-for-tests";
+import {
+    BlogPaginationView,
+    dataTestBlogCreate01,
+    dataTestBlogCreate02,
+    incorrectInputData
+} from "../data-for-tests/blog-data-for-tests";
 import {blogsTestManager} from "../utils/blogsTestManager";
 import {CreateBlogModel} from "../../src/models/blogs/input";
 
@@ -20,9 +25,10 @@ describe(RouterPaths.blogs, () => {
 
     //get empty array
     it('should return empty array', async () => {
-        await getRequest()
+        const createResponse = await getRequest()
             .get(RouterPaths.blogs)
-            .expect(200, [])
+            .expect(200)
+        expect(createResponse.body).toEqual(BlogPaginationView)
 
     })
     it('shouldreturn 404 for not existing blogs', async () => {

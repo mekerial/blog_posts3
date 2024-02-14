@@ -1,9 +1,9 @@
 export const BlogPaginationView = {
-    "pagesCount": 0,
+    "items": [],
     "page": 1,
     "pageSize": 10,
+    "pagesCount": 0,
     "totalCount": 0,
-    "items": []
 }
 
 
