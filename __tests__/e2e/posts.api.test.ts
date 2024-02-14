@@ -1,5 +1,5 @@
 import request from "supertest";
-import {app} from "../../src";
+import {app} from "../../src/settings";
 import {RouterPaths} from "../../src/routes/router-paths";
 import {dataTestPostCreate01, postPaginationView} from "../data-for-tests/post-data-for-tests";
 
