@@ -1,5 +1,5 @@
 import {CreateBlogModel, UpdateBlogModel} from "../../src/models/blogs/input";
-import {app} from "../../src";
+import {app} from "../../src/settings";
 import request from "supertest";
 import {RouterPaths} from "../../src/routes/router-paths";
 
