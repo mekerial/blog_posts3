@@ -20,7 +20,6 @@ postRoute.get('/', async (req: RequestWithQuery<QueryPostInputModel>, res: Respo
 
 
     const posts = await PostRepository.getAllPosts(sortData)
-    console.log(posts)
     res.status(200).send(posts)
 })
 postRoute.get('/:id', async (req: RequestWithParams<Params>, res: Response) => {
