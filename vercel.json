@@ -2,9 +2,9 @@
   "version": 2,
   "name": "blog-posts3",
   "builds": [
-    { "src": "dist/index.js", "use": "@vercel/node" }
+    { "src": "src/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "dist/index.js" }
+    { "src": "/(.*)", "dest": "src/index.ts" }
   ]
 }
