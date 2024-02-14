@@ -13,14 +13,37 @@ export class UserRepository {
         const searchEmailTerm = sortData.searchEmailTerm ?? null
 
         let filter = {}
-
-        if (searchLoginTerm || searchEmailTerm) {
-            filter = {
+        let filterOptions = []
+        // if (searchLoginTerm || searchEmailTerm) {
+        //     filter = {
+        //         name: {
+        //             $regex: searchLoginTerm, searchEmailTerm,
+        //             $options: 'i'
+        //         }
+        //     }
+        // }
+        if (searchLoginTerm) {
+            filterOptions.push({
                 name: {
-                    $regex: searchLoginTerm, searchEmailTerm,
+                    $regex: searchLoginTerm,
                     $options: 'i'
                 }
+            })
+        }
+        if (searchEmailTerm) {
+            filterOptions.push({
+                email: {
+                    $regex: searchEmailTerm,
+                    $options: 'i'
+                }
+            })
+        }
+        if (filterOptions.length > 1) {
+            filter = {
+                $or: filterOptions
             }
+        } else {
+            filter = filterOptions[0]
         }
 
         const users = await userCollection

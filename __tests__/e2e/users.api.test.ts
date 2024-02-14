@@ -28,7 +28,7 @@ describe(RouterPaths.users, () => {
             .get(RouterPaths.users)
             .set('authorization', 'Basic YWRtaW46cXdlcnR5')
             .expect(200)
-        console.log(createResponse.body)
+
 
         // expect(createResponse.body).toEqual(userPaginationView)
 
