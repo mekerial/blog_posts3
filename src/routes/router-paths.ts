@@ -3,5 +3,5 @@ export const RouterPaths = {
     posts: '/posts',
     users: '/users',
     testing: '/testing/all-data',
-    auth: '/auth/login'
+    auth: '/auth'
 }
