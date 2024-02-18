@@ -4,9 +4,9 @@ import {CommentDbType} from "../../db/db-types";
 
 export const commentMapper = (commentDB: WithId<CommentDbType>): OutputCommentModel => {
     return {
-        id: commentDB._id.toString(),
         content: commentDB.content,
         commentatorInfo: commentDB.commentatorInfo,
-        createdAt: commentDB.createdAt
+        createdAt: commentDB.createdAt,
+        id: commentDB._id.toString()
     }
 }
