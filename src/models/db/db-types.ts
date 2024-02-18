@@ -30,3 +30,15 @@ export type UserDbType = {
     passwordSalt: string,
     createdAt: string
 }
+
+export type CommentDbType = {
+    content: string,
+    commentatorInfo: commentatorInfo,
+    createdAt: string,
+    postId: string
+}
+
+export type commentatorInfo = {
+    userId: string,
+    userLogin: string,
+}

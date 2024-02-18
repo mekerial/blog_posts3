@@ -20,14 +20,14 @@ export class UserService {
 
         return UserRepository.createUser(newUser)
     }
-    static async checkCredentials(auth: LoginInputModel): Promise<boolean | null> {
+    static async checkCredentials(auth: LoginInputModel) {
         const loginOrEmail = auth.loginOrEmail
         const user = await UserRepository.findUserByLoginOrEmail(loginOrEmail)
         if (!user) return false
 
         const passwordHash = await UserService.generateHash(auth.password, user.passwordSalt)
         if (passwordHash === user.passwordHash) {
-            return true
+            return user
         }
         return false
     }

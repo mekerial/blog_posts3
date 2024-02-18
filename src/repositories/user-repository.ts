@@ -2,6 +2,7 @@ import {CreateUserWithHash, QueryUserInputModel} from "../models/users/input";
 import {userCollection} from "../db/db";
 import {userMapper} from "../models/users/mappers/user-mapper";
 import {ObjectId} from "mongodb";
+import {OutputUserModel} from "../models/users/output";
 
 export class UserRepository {
     static async getAllUsers(sortData: QueryUserInputModel) {
@@ -66,6 +67,14 @@ export class UserRepository {
             totalCount,
             items: users
         }
+    }
+
+    static async getUserById(id: ObjectId): Promise<OutputUserModel | null> {
+        const user = await userCollection.findOne({_id: new ObjectId(id)})
+        if (!user) {
+            return null
+        }
+        return userMapper(user)
     }
 
     static async findUserByLoginOrEmail(LoginOrEmail: string) {
