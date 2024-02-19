@@ -118,6 +118,20 @@ postRoute.delete('/:id', authMiddleware, async (req: RequestWithParams<string>, 
 //comments
 postRoute.get('/:id/comments', async (req: RequestWithParamsAndQuery<Params, QueryCommentInputModel>, res: Response) => {
     const postId = req.params.id
+
+    if (!ObjectId.isValid(postId)) {
+        res.sendStatus(404)
+        return
+    }
+
+    const post = await PostRepository.getPostById(postId)
+
+    if (!post) {
+        res.sendStatus(404)
+        return
+    }
+
+
     const sortData = {
         pageSize: req.query.pageSize,
         pageNumber:  req.query.pageNumber,
@@ -128,7 +142,6 @@ postRoute.get('/:id/comments', async (req: RequestWithParamsAndQuery<Params, Que
     const comments = await CommentRepository.getCommentsByPostId(postId, sortData)
 
     res.status(200).send(comments)
-
 })
 postRoute.post('/:id/comments', loginMiddleWare, commentValidation(), async (req: RequestWithBodyAndParams<Params, CreateCommentModel>, res: Response) => {
     const content = req.body.content

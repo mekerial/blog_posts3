@@ -3,6 +3,7 @@ import {commentMapper} from "../models/comments/mappers/mapper";
 import {CreateCommentModel, QueryCommentInputModel} from "../models/comments/input";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
+import {OutputCommentModel} from "../models/comments/output";
 
 
 export class CommentRepository {
@@ -20,7 +21,10 @@ export class CommentRepository {
             .limit(+pageSize)
             .toArray()
 
-        const totalCount = await commentCollection.countDocuments({})
+        const allComments = await commentCollection
+            .find({postId: postId})
+            .toArray()
+        const totalCount = allComments.length
 
         const pagesCount = Math.ceil(totalCount / pageSize)
 
@@ -33,9 +37,7 @@ export class CommentRepository {
         }
 
     }
-    static async createComment(postId: string,
-                               content: string,
-                               user: OutputUserModel) {
+    static async createComment(postId: string, content: string, user: OutputUserModel) {
         const post = await postCollection.findOne({_id: new ObjectId(postId)})
         if (!post){
             return null
@@ -55,11 +57,13 @@ export class CommentRepository {
             id: newComment.insertedId
         }
     }
-    static async getCommentById(id: string) {
+    static async getCommentById(id: string): Promise<OutputCommentModel | null> {
         const comment = await commentCollection.findOne({_id: new ObjectId(id)})
+
         if (!comment) {
             return null
         }
+
         return commentMapper(comment)
     }
     static async updateComment(id: string, updateData: CreateCommentModel) {
@@ -71,7 +75,7 @@ export class CommentRepository {
 
         return !!comment.matchedCount
     }
-    static async deleteComment(id: string) {
+    static async deleteComment(id: string): Promise<boolean> {
         const comment = await commentCollection.deleteOne({_id: new ObjectId(id)})
 
         return !!comment.deletedCount

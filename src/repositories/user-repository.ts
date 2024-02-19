@@ -46,8 +46,7 @@ export class UserRepository {
         } else {
             filter = filterOptions[0]
         }
-        console.log(filter)
-        console.log(filterOptions)
+
         const users = await userCollection
             .find(filter)
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
