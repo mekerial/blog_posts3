@@ -35,7 +35,7 @@ export class PostRepository {
     static async getPostById(id: string) {
         const post = await postCollection.findOne({_id: new ObjectId(id)})
         if (!post) {
-            return null
+            return false
         }
         return postMapper(post)
     }

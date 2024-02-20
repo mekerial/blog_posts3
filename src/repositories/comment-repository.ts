@@ -4,10 +4,18 @@ import {CreateCommentModel, QueryCommentInputModel} from "../models/comments/inp
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
 import {OutputCommentModel} from "../models/comments/output";
+import {PostRepository} from "./post-repository";
 
 
 export class CommentRepository {
     static async getCommentsByPostId(postId: string, sortData: QueryCommentInputModel) {
+
+        const post = await PostRepository.getPostById(postId)
+
+        if (!post) {
+            return null
+        }
+
 
         const pageNumber = sortData.pageNumber ?? 1
         const pageSize = +(sortData.pageSize ?? 10)

@@ -141,13 +141,23 @@ postRoute.get('/:id/comments', async (req: RequestWithParamsAndQuery<Params, Que
 
     const comments = await CommentRepository.getCommentsByPostId(postId, sortData)
 
+    if (!comments) {
+        res.sendStatus(404)
+    }
+
     res.status(200).send(comments)
 })
 postRoute.post('/:id/comments', loginMiddleWare, commentValidation(), async (req: RequestWithBodyAndParams<Params, CreateCommentModel>, res: Response) => {
-    const content = req.body.content
+
     const postId = req.params.id
+    const content = req.body.content
     const user = req.user
 
     const newComment = await CommentRepository.createComment(postId, content, user!)
+
+    if(!newComment) {
+        res.sendStatus(404)
+        return
+    }
     res.status(201).send(newComment)
 })
