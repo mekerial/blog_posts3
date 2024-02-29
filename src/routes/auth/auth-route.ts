@@ -80,6 +80,7 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
     }
 })
 authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryConfirmInputModel>, res: Response) => {
+    console.log('post on /registration-confirmation')
     const emailCode = req.query.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
     if (!user) {
@@ -88,6 +89,10 @@ authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryC
     }
     if (emailCode === user!.emailConfirmation.confirmationCode && user!.emailConfirmation.expirationDate > new Date()) {
         const result = await UserRepository.updateConfirmation(user._id)
+        if (!result) {
+            res.sendStatus(500)
+            return
+        }
         console.log('user email confirmed')
         res.sendStatus(204)
         return
