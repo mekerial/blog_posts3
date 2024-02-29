@@ -60,7 +60,7 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
             confirmationCode: uuidv4(),
             expirationDate: add(new Date(), {
                 // hours: 1
-                minutes: 3
+                minutes: 5
             }),
             isConfirmed: false
         }
@@ -68,7 +68,7 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
     const code = user.emailConfirmation.confirmationCode
 
 
-    const createUser = await UserService.createUser(user)
+    const createUser = await UserService.createUserWithEmailConfirm(user)
     if (createUser) {
         await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
