@@ -89,5 +89,7 @@ authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryC
     if (emailCode === user!.emailConfirmation.confirmationCode && user!.emailConfirmation.expirationDate > new Date()) {
         const result = await UserRepository.updateConfirmation(user._id)
         console.log('user email confirmed')
+        res.sendStatus(204)
+        return
     }
 })
