@@ -71,11 +71,13 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
     const createUser = await UserService.createUserWithEmailConfirm(user)
     if (createUser) {
         await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
-        <h1>Thanks for your registration</h1>
-        <p>To finish registration please follow the link below:
-            <a href="https://blog-posts3.vercel.app/registration-confirmation/?code=${code}">complete registration</a>
-        </p>
-    `);
+    <form action="https://blog-posts3.vercel.app/registration-confirmation/" method="post">
+    <h1>Thanks for your registration</h1>
+    <p>To finish registration please click the button below:</p>
+    <input type="hidden" name="code" value="${code}">
+    <button type="submit">Complete Registration</button>
+    </form>
+`);
         res.sendStatus(204);
     }
 })
