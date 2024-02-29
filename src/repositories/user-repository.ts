@@ -3,11 +3,13 @@ import {userCollection} from "../db/db";
 import {userMapper} from "../models/users/mappers/user-mapper";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
+import {UserDbType} from "../models/db/db-types";
+import {UserService} from "../services/user-service";
 
 export class UserRepository {
     static async getAllUsers(sortData: QueryUserInputModel) {
         const sortBy = sortData.sortBy ?? 'createdAt'
-        const sortDirection = sortData.sortDirection ??  'desc'
+        const sortDirection = sortData.sortDirection ?? 'desc'
         const pageNumber = sortData.pageNumber ?? 1
         const pageSize = sortData.pageSize ?? 10
         const searchLoginTerm = sortData.searchLoginTerm ?? null
@@ -49,7 +51,7 @@ export class UserRepository {
 
         const users = await userCollection
             .find(filter)
-            .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
+            .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1})
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
             .map(userMapper)
@@ -67,7 +69,6 @@ export class UserRepository {
             items: users
         }
     }
-
     static async getUserById(id: ObjectId): Promise<OutputUserModel | null> {
         const user = await userCollection.findOne({_id: new ObjectId(id)})
         if (!user) {
@@ -75,11 +76,9 @@ export class UserRepository {
         }
         return userMapper(user)
     }
-
     static async findUserByLoginOrEmail(LoginOrEmail: string) {
-        return await userCollection.findOne({ $or: [{email: LoginOrEmail}, {login: LoginOrEmail}]})
+        return await userCollection.findOne({$or: [{email: LoginOrEmail}, {login: LoginOrEmail}]})
     }
-
     static async createUser(createdData: CreateUserWithHash) {
 
         const user = {
@@ -95,5 +94,11 @@ export class UserRepository {
 
         return !!user.deletedCount
     }
+    static async getUserByVerifyCode(code: string) {
+        return await userCollection.findOne({'emailConfirmation.code': code})
+    }
+    static async updateConfirmation(_id: ObjectId) {
+        const result = await userCollection.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})
+        return result.modifiedCount === 1
+    }
 }
-

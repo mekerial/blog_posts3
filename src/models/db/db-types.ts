@@ -1,5 +1,7 @@
 import {OutputBlogModel} from "../blogs/output";
 import {OutputPostModel} from "../posts/output";
+import {v4 as uuidv4} from "uuid";
+import {add} from "date-fns/add";
 
 export type DBType = {
     blogs: OutputBlogModel[],
@@ -24,11 +26,18 @@ export type PostDBType = {
 }
 
 export type UserDbType = {
-    login: string,
-    email: string,
-    passwordHash: string,
-    passwordSalt: string,
-    createdAt: string
+    accountData: {
+        login: string,
+        email: string,
+        passwordHash: string,
+        passwordSalt: string,
+        createdAt: string
+    },
+    emailConfirmation: {
+        confirmationCode: string,
+        expirationDate: Date,
+        isConfirmed: boolean
+    }
 }
 
 export type CommentDbType = {

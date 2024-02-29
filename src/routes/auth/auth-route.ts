@@ -1,9 +1,16 @@
-import {Router, Response} from 'express'
+import {Router, Response} from 'express';
 import {RequestWithBody, RequestWithQuery} from "../../common";
-import {LoginInputModel} from "../../models/logins/input";
+import {LoginInputModel, QueryConfirmInputModel} from "../../models/logins/input";
 import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
+import {userValidation} from "../../validators/user-validator";
+import {CreateUserModel} from "../../models/users/input";
+import {emailAdapter} from "../../adapters/email/email-adapter";
+import {emailSubject} from "../../adapters/email/email-manager";
+import {v4 as uuidv4} from 'uuid'
+import {add} from "date-fns/add";
+import {UserRepository} from "../../repositories/user-repository";
 
 export const authRoute = Router({})
 
@@ -41,4 +48,46 @@ authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Re
     console.log('sended 200')
     res.send(userMe)
     console.log('success get request | auth/me')
+})
+authRoute.post('/registration', userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
+    const user = {
+        accountData: {
+            login: req.body.login,
+            email: req.body.email,
+            password: req.body.password,
+        },
+        emailConfirmation: {
+            confirmationCode: uuidv4(),
+            expirationDate: add(new Date(), {
+                // hours: 1
+                minutes: 3
+            }),
+            isConfirmed: false
+        }
+    }
+    const code = user.emailConfirmation.confirmationCode
+
+
+    const createUser = await UserService.createUser(user)
+    if (createUser) {
+        await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
+        <h1>Thanks for your registration</h1>
+        <p>To finish registration please follow the link below:
+            <a href="https://blog-posts3.vercel.app/?code=${code}">complete registration</a>
+        </p>
+    `);
+        res.sendStatus(204);
+    }
+})
+authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryConfirmInputModel>, res: Response) => {
+    const emailCode = req.query.code
+    const user = await UserRepository.getUserByVerifyCode(emailCode)
+    if (!user) {
+        res.sendStatus(404)
+        return
+    }
+    if (emailCode === user!.emailConfirmation.confirmationCode && user!.emailConfirmation.expirationDate > new Date()) {
+        const result = await UserRepository.updateConfirmation(user._id)
+        console.log('user email confirmed')
+    }
 })

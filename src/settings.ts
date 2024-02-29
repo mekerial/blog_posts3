@@ -5,6 +5,7 @@ import {userRoute} from "./routes/users/user-route";
 import {blogCollection, commentCollection, postCollection, userCollection} from "./db/db";
 import {authRoute} from "./routes/auth/auth-route";
 import {commentRoute} from "./routes/comments/comment-route";
+import {emailRoute} from "./routes/email/email-route";
 
 export const app = express()
 
@@ -24,3 +25,4 @@ app.use('/posts', postRoute)
 app.use('/users', userRoute)
 app.use('/auth', authRoute)
 app.use('/comments', commentRoute)
+app.use('/email', emailRoute)

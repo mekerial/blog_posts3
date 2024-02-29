@@ -6,12 +6,14 @@ import {
     RequestWithQuery
 } from "../../common";
 
-import {CreateUserModel, QueryUserInputModel} from "../../models/users/input";
+import {CreateUserModel, QueryUserInputModel, UserEmailModel} from "../../models/users/input";
 import {UserRepository} from "../../repositories/user-repository";
 import {authMiddleware} from "../../middlewares/auth/auth-middleware";
 import {ObjectId} from "mongodb";
 import {userValidation} from "../../validators/user-validator";
 import {UserService} from "../../services/user-service";
+import {v4 as uuidv4} from "uuid";
+import {add} from "date-fns/add";
 
 
 export const userRoute = Router({})
@@ -36,10 +38,20 @@ userRoute.post('/', authMiddleware, userValidation(), async (req: RequestWithBod
     const password = req.body.password
     const email = req.body.email
 
-    const newUser: CreateUserModel = {
-        login,
-        password,
-        email
+    const newUser: UserEmailModel = {
+        accountData: {
+            login: req.body.login,
+            email: req.body.email,
+            password: req.body.password,
+        },
+        emailConfirmation: {
+            confirmationCode: uuidv4(),
+            expirationDate: add(new Date(), {
+                // hours: 1
+                minutes: 3
+            }),
+            isConfirmed: false
+        }
     }
 
     const createdUser = await UserService.createUser(newUser)
