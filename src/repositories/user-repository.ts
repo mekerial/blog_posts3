@@ -3,8 +3,6 @@ import {userCollection} from "../db/db";
 import {userMapper} from "../models/users/mappers/user-mapper";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
-import {UserDbType} from "../models/db/db-types";
-import {UserService} from "../services/user-service";
 
 export class UserRepository {
     static async getAllUsers(sortData: QueryUserInputModel) {
