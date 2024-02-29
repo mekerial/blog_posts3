@@ -27,6 +27,30 @@ export class UserService {
 
         return UserRepository.createUser(newUser)
     }
+
+    static async createUserWithEmailConfirm(CreatedData: UserEmailModel): Promise<OutputUserModel> {
+        const passwordSalt = await bcrypt.genSalt(10)
+        const passwordHash = await this.generateHash(CreatedData.accountData.password, passwordSalt)
+
+        const newUser: UserDbType = {
+            accountData: {
+                login: CreatedData.accountData.login,
+                email: CreatedData.accountData.email,
+                passwordHash: passwordHash,
+                passwordSalt: passwordSalt,
+                createdAt: new Date().toISOString(),
+            },
+            emailConfirmation: {
+                confirmationCode: CreatedData.emailConfirmation.confirmationCode,
+                expirationDate: CreatedData.emailConfirmation.expirationDate,
+                isConfirmed: false
+            }
+        }
+
+        return UserRepository.createUser(newUser)
+    }
+
+
     static async checkCredentials(auth: LoginInputModel) {
         const loginOrEmail = auth.loginOrEmail
         const user = await UserRepository.findUserByLoginOrEmail(loginOrEmail)
