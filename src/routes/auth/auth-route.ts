@@ -71,7 +71,7 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
     const createUser = await UserService.createUserWithEmailConfirm(user)
     if (createUser) {
         await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
-    <form action="https://blog-posts3.vercel.app/registration-confirmation/" method="post">
+    <form action="https://blog-posts3.vercel.app/registration-confirmation/?code=${code}" method="post">
     <h1>Thanks for your registration</h1>
     <p>To finish registration please click the button below:</p>
     <input type="hidden" name="code" value="${code}">
