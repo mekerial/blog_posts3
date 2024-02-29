@@ -95,7 +95,7 @@ export class UserRepository {
         return !!user.deletedCount
     }
     static async getUserByVerifyCode(code: string) {
-        return await userCollection.findOne({'emailConfirmation.code': code})
+        return await userCollection.findOne({'emailConfirmation.confirmationCode': code})
     }
     static async updateConfirmation(_id: ObjectId) {
         const result = await userCollection.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})

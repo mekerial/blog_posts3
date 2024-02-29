@@ -4,5 +4,4 @@ export type LoginInputModel = {
 }
 export type QueryConfirmInputModel = {
     code: string,
-    email: string,
 }

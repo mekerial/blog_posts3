@@ -19,7 +19,7 @@ export const emailAdapter = {
             subject: subject,
             html: message
         })
-        console.log(info)
+        console.log(info.accepted)
 
         return info
     }
