@@ -77,7 +77,6 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
         <input type="hidden" name="code" value="${code}">
         <button type="submit">Завершить регистрацию</button>
         </form>
-
     `);
         res.sendStatus(204);
     }
