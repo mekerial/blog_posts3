@@ -67,7 +67,6 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
     }
     const code = user.emailConfirmation.confirmationCode
 
-
     const createUser = await UserService.createUserWithEmailConfirm(user)
     if (createUser) {
         await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
@@ -78,8 +77,8 @@ authRoute.post('/registration', userValidation(), async (req: RequestWithBody<Cr
         <button type="submit">Завершить регистрацию</button>
         </form>
     `);
-        res.sendStatus(204);
     }
+    res.sendStatus(204);
 })
 authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryConfirmInputModel>, res: Response) => {
     console.log('post on /registration-confirmation')

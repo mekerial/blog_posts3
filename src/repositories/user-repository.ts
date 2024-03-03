@@ -15,14 +15,8 @@ export class UserRepository {
 
         let filter = {}
         let filterOptions = []
-        // if (searchLoginTerm || searchEmailTerm) {
-        //     filter = {
-        //         name: {
-        //             $regex: searchLoginTerm, searchEmailTerm,
-        //             $options: 'i'
-        //         }
-        //     }
-        // }
+
+
         if (searchLoginTerm) {
             filterOptions.push({
                 login: {
@@ -75,7 +69,7 @@ export class UserRepository {
         return userMapper(user)
     }
     static async findUserByLoginOrEmail(LoginOrEmail: string) {
-        return await userCollection.findOne({$or: [{email: LoginOrEmail}, {login: LoginOrEmail}]})
+        return await userCollection.findOne({$or: [{"accountData.email": LoginOrEmail}, {"accountData.login": LoginOrEmail}]})
     }
     static async createUser(createdData: CreateUserWithHash) {
 
