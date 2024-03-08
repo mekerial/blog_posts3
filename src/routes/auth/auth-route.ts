@@ -112,6 +112,11 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
         console.log('email not found')
         return
     }
+    if (user.emailConfirmation.isConfirmed) {
+        res.sendStatus(400)
+        console.log('enail already confirmed')
+        return
+    }
 
     const code = user.emailConfirmation.confirmationCode
 
