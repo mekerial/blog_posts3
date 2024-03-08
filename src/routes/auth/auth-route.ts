@@ -74,7 +74,7 @@ authRoute.post('/registration', registrationMiddleWare(), userValidation(), asyn
         await emailAdapter.sendEmail(user.accountData.email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
         <p>To finish registration please follow the link below:
-        <a href='https://blog-posts3.onrender.com?code=${code}'>complete registration</a>
+        <a href='https://blog-posts3.onrender.com/registration-confirmation?code=${code}'>complete registration</a>
         </p>
     `);
     }
@@ -118,7 +118,7 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
     const result = await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
         <p>To finish registration please follow the link below:
-        <a href='https://blog-posts3.onrender.com/confirm-email?code=${code}'>complete registration</a>
+        <a href='https://blog-posts3.onrender.com/registration-confirmation?code=${code}'>complete registration</a>
         </p>
     `);
     if (!result) {
