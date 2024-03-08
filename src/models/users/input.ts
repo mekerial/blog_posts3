@@ -45,3 +45,7 @@ export type QueryUserInputModel = {
 export type ResendingEmailModel = {
     email: string
 }
+
+export type EmailConfirmationCode = {
+    code: string
+}

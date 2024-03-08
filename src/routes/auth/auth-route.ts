@@ -5,7 +5,7 @@ import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {userValidation} from "../../validators/user-validator";
-import {CreateUserModel, ResendingEmailModel} from "../../models/users/input";
+import {CreateUserModel, EmailConfirmationCode, ResendingEmailModel} from "../../models/users/input";
 import {emailAdapter} from "../../adapters/email/email-adapter";
 import {emailSubject} from "../../adapters/email/email-manager";
 import {v4 as uuidv4} from 'uuid'
@@ -81,9 +81,9 @@ authRoute.post('/registration', registrationMiddleWare(), userValidation(), asyn
 
     res.sendStatus(204);
 })
-authRoute.post('/registration-confirmation', async (req: RequestWithQuery<QueryConfirmInputModel>, res: Response) => {
+authRoute.post('/registration-confirmation', async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
     console.log('post on /registration-confirmation')
-    const emailCode = req.query.code
+    const emailCode = req.body.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
     if (!user) {
         res.sendStatus(404)
