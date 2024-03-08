@@ -118,6 +118,7 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
         return
     }
 
+
     const code = user.emailConfirmation.confirmationCode
 
     const result = await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
