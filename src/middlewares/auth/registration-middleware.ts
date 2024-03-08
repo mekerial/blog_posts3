@@ -1,9 +1,6 @@
-import dotenv from "dotenv";
 import {UserRepository} from "../../repositories/user-repository";
 import {inputValidation} from "../input-model-validation/input-validation";
 import {body} from "express-validator"
-
-dotenv.config()
 
 export const emailValidation = body('email').isString().trim().custom(async (email) => {
     const user = await UserRepository.findUserByLoginOrEmail(email)

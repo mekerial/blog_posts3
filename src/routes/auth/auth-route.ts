@@ -12,6 +12,7 @@ import {v4 as uuidv4} from 'uuid'
 import {add} from "date-fns/add";
 import {UserRepository} from "../../repositories/user-repository";
 import {registrationMiddleWare} from "../../middlewares/auth/registration-middleware";
+import {emailConfirmationMiddleWare} from "../../middlewares/auth/email-confirmation-middleware";
 
 export const authRoute = Router({})
 
@@ -81,7 +82,7 @@ authRoute.post('/registration', registrationMiddleWare(), userValidation(), asyn
 
     res.sendStatus(204);
 })
-authRoute.post('/registration-confirmation', async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
+authRoute.post('/registration-confirmation', emailConfirmationMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
     console.log('post on /registration-confirmation')
     const emailCode = req.body.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
