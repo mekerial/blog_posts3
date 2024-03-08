@@ -1,6 +1,6 @@
 import {Router, Response} from 'express';
 import {RequestWithBody, RequestWithQuery} from "../../common";
-import {LoginInputModel, QueryConfirmInputModel} from "../../models/logins/input";
+import {LoginInputModel} from "../../models/logins/input";
 import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
@@ -12,7 +12,8 @@ import {v4 as uuidv4} from 'uuid'
 import {add} from "date-fns/add";
 import {UserRepository} from "../../repositories/user-repository";
 import {registrationMiddleWare} from "../../middlewares/auth/registration-middleware";
-import {emailConfirmationMiddleWare} from "../../middlewares/auth/email-confirmation-middleware";
+import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
+import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
 
 export const authRoute = Router({})
 
@@ -82,7 +83,7 @@ authRoute.post('/registration', registrationMiddleWare(), userValidation(), asyn
 
     res.sendStatus(204);
 })
-authRoute.post('/registration-confirmation', emailConfirmationMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
+authRoute.post('/registration-confirmation', emailConfirmationByCodeMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
     console.log('post on /registration-confirmation')
     const emailCode = req.body.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
@@ -104,7 +105,7 @@ authRoute.post('/registration-confirmation', emailConfirmationMiddleWare(), asyn
         return
     }
 })
-authRoute.post('/registration-email-resending', async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
+authRoute.post('/registration-email-resending', emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
     const email = req.body.email
     const user = await UserRepository.findUserByLoginOrEmail(email)
 
