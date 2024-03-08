@@ -93,4 +93,8 @@ export class UserRepository {
         const result = await userCollection.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})
         return result.modifiedCount === 1
     }
+    static async recoveryConfirmationVerifyCode(_id: ObjectId, code: string, date: Date) {
+        await userCollection.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
+        await userCollection.updateOne({_id}, {$set: {'emailConfirmation.expirationDate': date}})
+    }
 }

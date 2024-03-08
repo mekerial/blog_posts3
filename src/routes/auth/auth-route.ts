@@ -114,12 +114,16 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
     }
     if (user.emailConfirmation.isConfirmed) {
         res.sendStatus(400)
-        console.log('enail already confirmed')
+        console.log('email already confirmed')
         return
     }
 
-
-    const code = user.emailConfirmation.confirmationCode
+    const code = uuidv4()
+    const date = add(new Date(), {
+        // hours: 1
+        minutes: 5
+    })
+    await UserRepository.recoveryConfirmationVerifyCode(user._id, code, date)
 
     const result = await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
@@ -127,11 +131,13 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
         <a href='https://blog-posts3.onrender.com/registration-confirmation?code=${code}'>complete registration</a>
         </p>
     `);
+
     if (!result) {
         res.sendStatus(400)
         console.log('not resend')
         return
     }
 
-    res.sendStatus(204);
+    console.log('success resend on email')
+    res.sendStatus(204)
 })
