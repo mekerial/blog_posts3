@@ -117,7 +117,7 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
     await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
         <p>To finish registration please follow the link below:
-        <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
+        <a href='https://blog-posts3.onrender.com/confirm-email?code=${code}'>complete registration</a>
         </p>
     `);
 
