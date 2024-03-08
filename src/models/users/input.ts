@@ -41,3 +41,7 @@ export type QueryUserInputModel = {
     searchLoginTerm?: string,
     searchEmailTerm?: string
 }
+
+export type ResendingEmailModel = {
+    email: string
+}
