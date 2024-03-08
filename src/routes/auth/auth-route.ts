@@ -109,17 +109,23 @@ authRoute.post('/registration-email-resending', async (req: RequestWithBody<Rese
 
     if (!user) {
         res.sendStatus(404)
+        console.log('email not found')
         return
     }
 
     const code = user.emailConfirmation.confirmationCode
 
-    await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
+    const result = await emailAdapter.sendEmail(email, emailSubject.confirmationRegistration, `
         <h1>Thanks for your registration</h1>
         <p>To finish registration please follow the link below:
         <a href='https://blog-posts3.onrender.com/confirm-email?code=${code}'>complete registration</a>
         </p>
     `);
+    if (!result) {
+        res.sendStatus(400)
+        console.log('not resend')
+        return
+    }
 
     res.sendStatus(204);
 })
