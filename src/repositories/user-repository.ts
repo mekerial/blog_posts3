@@ -96,5 +96,7 @@ export class UserRepository {
     static async recoveryConfirmationVerifyCode(_id: ObjectId, code: string, date: Date) {
         await userCollection.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
         await userCollection.updateOne({_id}, {$set: {'emailConfirmation.expirationDate': date}})
+        console.log('success update verify code')
+        return true
     }
 }
