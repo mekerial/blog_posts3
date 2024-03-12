@@ -1,7 +1,6 @@
 import {OutputBlogModel} from "../blogs/output";
 import {OutputPostModel} from "../posts/output";
-import {v4 as uuidv4} from "uuid";
-import {add} from "date-fns/add";
+import {ObjectId} from "mongodb";
 
 export type DBType = {
     blogs: OutputBlogModel[],
@@ -50,4 +49,9 @@ export type CommentDbType = {
 export type commentatorInfo = {
     userId: string,
     userLogin: string,
+}
+
+export type refreshTokenDbType = {
+    userId: ObjectId,
+    refreshToken: string
 }

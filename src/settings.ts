@@ -6,10 +6,13 @@ import {blogCollection, commentCollection, postCollection, userCollection} from 
 import {authRoute} from "./routes/auth/auth-route";
 import {commentRoute} from "./routes/comments/comment-route";
 import {emailRoute} from "./routes/email/email-route";
+import cookieParser from "cookie-parser";
 
 export const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
+
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
     // await database.dropDatabase()
 

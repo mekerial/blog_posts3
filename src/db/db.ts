@@ -1,4 +1,4 @@
-import {BlogDBType, CommentDbType, DBType, PostDBType, UserDbType} from "../models/db/db-types";
+import {BlogDBType, CommentDbType, DBType, PostDBType, refreshTokenDbType, UserDbType} from "../models/db/db-types";
 import {MongoClient} from "mongodb";
 import dotenv from "dotenv";
 
@@ -23,6 +23,8 @@ export const blogCollection = database.collection<BlogDBType>('blogs')
 export const postCollection = database.collection<PostDBType>('posts')
 export const userCollection = database.collection<UserDbType>('users')
 export const commentCollection = database.collection<CommentDbType>('comments')
+export const refreshTokenCollection = database.collection<refreshTokenDbType>('refreshTokens')
+
 
 
 export const runDb = async () => {

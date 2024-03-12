@@ -5,7 +5,7 @@ import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {userValidation} from "../../validators/user-validator";
-import {CreateUserModel, EmailConfirmationCode, ResendingEmailModel} from "../../models/users/input";
+import {AccessTokenModel, CreateUserModel, EmailConfirmationCode, ResendingEmailModel} from "../../models/users/input";
 import {emailAdapter} from "../../adapters/email/email-adapter";
 import {emailSubject} from "../../adapters/email/email-manager";
 import {v4 as uuidv4} from 'uuid'
@@ -14,6 +14,7 @@ import {UserRepository} from "../../repositories/user-repository";
 import {registrationMiddleWare} from "../../middlewares/auth/registration-middleware";
 import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
 import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
+
 
 export const authRoute = Router({})
 
@@ -33,12 +34,15 @@ authRoute.post('/login', async (req: RequestWithBody<LoginInputModel>, res: Resp
         return
     }
 
-    const token = await jwtService.createJWT(newAuth)
+    const token = await jwtService.createJWT(newAuth._id)
+    const refreshToken = await jwtService.createRefreshToken(newAuth._id)
 
-    const ResponseToken = {
+    const accessToken = {
         accessToken: token.toString()
     }
-    res.status(200).send(ResponseToken)
+
+    res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
+    res.status(200).send(accessToken)
     console.log('post request | auth/login')
 })
 authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Response) => {
@@ -141,5 +145,33 @@ authRoute.post('/registration-email-resending', emailConfirmationByEmailMiddleWa
     }
 
     console.log('success resend on email')
+    res.sendStatus(204)
+})
+authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, res: Response) => {
+    console.log('/refresh-token')
+    const refreshToken = req.cookies.refreshToken
+
+    const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken)
+
+    if (!updateTokens) {
+        res.sendStatus(401)
+        return
+    }
+    const newAccessToken = updateTokens.accessToken
+    const newRefreshToken = updateTokens.refreshToken
+
+    res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
+    res.status(200)
+    res.send({ accessToken: newAccessToken })
+})
+authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) => {
+    const refreshToken = req.cookies.refreshToken
+
+    const logout = await jwtService.revokeRefreshToken(refreshToken)
+    if (!logout) {
+        res.sendStatus(401)
+        return
+    }
+
     res.sendStatus(204)
 })

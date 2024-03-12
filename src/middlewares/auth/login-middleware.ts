@@ -14,7 +14,7 @@ export const loginMiddleWare = async (req: Request, res: Response, next: NextFun
 
     const token = req.headers.authorization.split(' ')[1]
 
-    const userId = await jwtService.getUserIdByToken(token)
+    const userId = await jwtService.getUserIdByAccessToken(token)
     if(!userId) {
         res.sendStatus(401)
         console.log('unsuccess login middleware, not found user by token')
