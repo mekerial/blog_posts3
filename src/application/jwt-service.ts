@@ -55,7 +55,6 @@ export const jwtService = {
         const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
         if (!userId || !(result.userId !== userId)) {
             console.log('1 unsuccess update tokens!')
-            console.log(result.userId, (result.userId !== userId))
             return null
         }
 

@@ -151,7 +151,6 @@ authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, 
     console.log('/refresh-token')
     const refreshToken = req.cookies.refreshToken
     const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken)
-    console.log(updateTokens)
 
     if (!updateTokens) {
         res.sendStatus(401)
