@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import {ObjectId} from "mongodb";
 import {refreshTokenCollection} from "../db/db";
 dotenv.config()
+
 export const jwtService = {
     async createJWT(userId: ObjectId) {
         const accessToken = jwt.sign({userId: userId}, process.env.JWT_SECRET!, {expiresIn: '10000'})
@@ -32,8 +33,9 @@ export const jwtService = {
     async getUserIdByRefreshToken(refreshToken: string) {
         try {
             const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
+            const getRefreshToken = await refreshTokenCollection.find({refreshToken: refreshToken})
 
-            if (refreshTokenCollection.find({refreshToken: refreshToken})) {
+            if (getRefreshToken) {
                 return new ObjectId(result.userId)
             } else {
                 return null
@@ -50,8 +52,10 @@ export const jwtService = {
             return null
         }
 
-        const userId = await this.getUserIdByRefreshToken(refreshToken)
-        if (!userId || (result.userId !== userId)) {
+        const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
+        if (!userId || !(result.userId !== userId)) {
+            console.log('1 unsuccess update tokens!')
+            console.log(result.userId, (result.userId !== userId))
             return null
         }
 
@@ -59,8 +63,8 @@ export const jwtService = {
         if (result) {
             try {
                 const verifyToken: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
-                const newAccessToken = this.createJWT(userId)
-                const newRefreshToken = this.createRefreshToken(userId)
+                const newAccessToken = await jwtService.createJWT(userId)
+                const newRefreshToken = await jwtService.createRefreshToken(userId)
 
                 await refreshTokenCollection.deleteOne({refreshToken: refreshToken})
 
@@ -72,9 +76,11 @@ export const jwtService = {
                     refreshToken: newRefreshToken
                 }
             } catch {
+                console.log('2 unsuccess update tokens!')
                 return null
             }
         } else {
+            console.log('3 unsuccess update tokens!')
             return null
         }
     },
@@ -85,8 +91,8 @@ export const jwtService = {
             return null
         }
 
-        const userId = await this.getUserIdByRefreshToken(refreshToken)
-        if (!userId || (result.userId !== userId)) {
+        const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
+        if (!userId || !(result.userId !== userId)) {
             return null
         }
 

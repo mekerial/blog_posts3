@@ -150,19 +150,19 @@ authRoute.post('/registration-email-resending', emailConfirmationByEmailMiddleWa
 authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, res: Response) => {
     console.log('/refresh-token')
     const refreshToken = req.cookies.refreshToken
-
     const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken)
+    console.log(updateTokens)
 
     if (!updateTokens) {
         res.sendStatus(401)
         return
     }
-    const newAccessToken = updateTokens.accessToken
-    const newRefreshToken = updateTokens.refreshToken
+    const newAccessTokenPromise = updateTokens.accessToken
+    const newRefreshTokenPromise = updateTokens.refreshToken
 
-    res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
+    res.cookie('refreshToken', newRefreshTokenPromise, {httpOnly: true, secure: true})
     res.status(200)
-    res.send({ accessToken: newAccessToken })
+    res.send({ accessToken: newAccessTokenPromise })
 })
 authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) => {
     const refreshToken = req.cookies.refreshToken

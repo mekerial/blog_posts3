@@ -2,7 +2,7 @@ import express, {Request, Response} from "express";
 import {blogRoute} from "./routes/blogs/blog-route";
 import {postRoute} from "./routes/posts/post-route";
 import {userRoute} from "./routes/users/user-route";
-import {blogCollection, commentCollection, postCollection, userCollection} from "./db/db";
+import {blogCollection, commentCollection, postCollection, refreshTokenCollection, userCollection} from "./db/db";
 import {authRoute} from "./routes/auth/auth-route";
 import {commentRoute} from "./routes/comments/comment-route";
 import {emailRoute} from "./routes/email/email-route";
@@ -20,6 +20,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
     await postCollection.deleteMany({})
     await userCollection.deleteMany({})
     await commentCollection.deleteMany({})
+    await refreshTokenCollection.deleteMany({})
 
     res.sendStatus(204)
 })
@@ -29,3 +30,5 @@ app.use('/users', userRoute)
 app.use('/auth', authRoute)
 app.use('/comments', commentRoute)
 app.use('/email', emailRoute)
+
+
