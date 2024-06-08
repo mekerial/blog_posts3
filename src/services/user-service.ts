@@ -1,5 +1,5 @@
 import {LoginInputModel} from "../models/logins/input";
-import {CreateUserModel, UserEmailModel} from "../models/users/input";
+import {UserEmailModel} from "../models/users/input";
 import {UserDbType} from "../models/db/db-types";
 import bcrypt from 'bcrypt'
 import {UserRepository} from "../repositories/user-repository";
@@ -50,7 +50,6 @@ export class UserService {
         return UserRepository.createUser(newUser)
     }
 
-
     static async checkCredentials(auth: LoginInputModel) {
         const loginOrEmail = auth.loginOrEmail
         const user = await UserRepository.findUserByLoginOrEmail(loginOrEmail)
@@ -62,6 +61,7 @@ export class UserService {
         }
         return false
     }
+
     static async generateHash(password: string, passwordSalt: string) {
         return await bcrypt.hash(password, passwordSalt)
     }

@@ -20,10 +20,10 @@ export const jwtService = {
         }
     },
 
-    async createRefreshToken(userId: ObjectId) {
+    async createRefreshToken(userId: ObjectId, deviceId: string) {
         const refreshTokenWithId = {
             userId: userId,
-            refreshToken: jwt.sign({userId: userId}, process.env.REFRESH_SECRET!, {expiresIn: '20000'})
+            refreshToken: jwt.sign({userId: userId, deviceId: deviceId}, process.env.REFRESH_SECRET!, {expiresIn: '20000'})
         }
 
         await refreshTokenCollection.insertOne(refreshTokenWithId)
@@ -46,7 +46,23 @@ export const jwtService = {
         }
     },
 
-    async updateAccessTokenByRefreshToken(refreshToken: string) {
+    async getDeviceIdByRefreshToken(refreshToken: string) {
+        try {
+            const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
+            const getRefreshToken = await refreshTokenCollection.find({refreshToken: refreshToken})
+
+            if (getRefreshToken) {
+                return result.deviceId
+            } else {
+                return null
+            }
+
+        } catch {
+            return null
+        }
+    },
+
+    async updateAccessTokenByRefreshToken(refreshToken: string, deviceId: string) {
         const result: refreshTokenDbType | null = await refreshTokenCollection.findOne({refreshToken: refreshToken})
         if (!result) {
             return null
@@ -63,7 +79,7 @@ export const jwtService = {
             try {
                 const verifyToken: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
                 const newAccessToken = await jwtService.createJWT(userId)
-                const newRefreshToken = await jwtService.createRefreshToken(userId)
+                const newRefreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
                 await refreshTokenCollection.deleteOne({refreshToken: refreshToken})
 

@@ -14,6 +14,7 @@ import {UserRepository} from "../../repositories/user-repository";
 import {registrationMiddleWare} from "../../middlewares/auth/registration-middleware";
 import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
 import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
+import {SecurityService} from "../../services/security-service";
 
 
 export const authRoute = Router({})
@@ -21,6 +22,8 @@ export const authRoute = Router({})
 authRoute.post('/login', async (req: RequestWithBody<LoginInputModel>, res: Response) => {
     const loginOrEmail = req.body.loginOrEmail
     const password = req.body.password
+    const deviceTitle = req.headers["user-agent"] || "new device"
+    const IP = req.ip || "no ip"
 
     const auth = {
         loginOrEmail,
@@ -33,15 +36,25 @@ authRoute.post('/login', async (req: RequestWithBody<LoginInputModel>, res: Resp
         res.sendStatus(401)
         return
     }
+    const userId = newAuth._id
 
-    const token = await jwtService.createJWT(newAuth._id)
-    const refreshToken = await jwtService.createRefreshToken(newAuth._id)
+    const deviceId = uuidv4()
+
+    const token = await jwtService.createJWT(userId)
+    const refreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
     const accessToken = {
         accessToken: token.toString()
     }
 
     res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
+    res.cookie('deviceId', deviceId, {httpOnly: true, secure: true})
+
+
+    await SecurityService.createSession(IP, deviceTitle, deviceId, userId, refreshToken)
+    console.log(IP)
+
+
     res.status(200).send(accessToken)
     console.log('post request | auth/login')
 })
@@ -150,7 +163,8 @@ authRoute.post('/registration-email-resending', emailConfirmationByEmailMiddleWa
 authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, res: Response) => {
     console.log('/refresh-token')
     const refreshToken = req.cookies.refreshToken
-    const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken)
+    const deviceId = req.cookies.deviceId
+    const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken, deviceId)
 
     if (!updateTokens) {
         res.sendStatus(401)

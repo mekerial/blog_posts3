@@ -55,3 +55,12 @@ export type refreshTokenDbType = {
     userId: ObjectId,
     refreshToken: string
 }
+
+export type sessionDbType = {
+    issuedAt: string,
+    deviceId: string,
+    IP: string,
+    deviceName: string,
+    userId: ObjectId,
+    refreshToken: string
+}
