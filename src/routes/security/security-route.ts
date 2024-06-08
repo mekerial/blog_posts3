@@ -7,7 +7,7 @@ import {SecurityService} from "../../services/security-service";
 
 export const securityRoute = Router({})
 
-securityRoute.get('/devices', loginMiddleWare, async (req: Request, res: Response) => {
+securityRoute.get('/devices', async (req: Request, res: Response) => {
     console.log('get request | /devices')
     const refreshToken = req.cookies.refreshToken
     const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
