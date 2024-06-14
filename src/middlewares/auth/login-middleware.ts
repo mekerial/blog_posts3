@@ -21,6 +21,7 @@ export const loginMiddleWare = async (req: Request, res: Response, next: NextFun
         return
     }
 
+
     req.user = await UserRepository.getUserById(userId)
     if(!req.user) {
         console.log('user is null')

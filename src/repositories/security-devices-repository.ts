@@ -1,32 +1,36 @@
 import {sessionCollection} from "../db/db";
 import {ObjectId} from "mongodb";
+import {sessionMapper} from "../models/sessions/mappers/mapper";
 
 export class SessionsRepository {
     static async getSession(deviceId: string) {
         return await sessionCollection.findOne({deviceId: deviceId})
     }
-    static async createSession(IP: string,
+    static async createSession(ip: string,
                                deviceId: string,
                                deviceTitle: string,
                                userId: ObjectId,
                                refreshToken: string) {
         const issuedAt = new Date().toISOString()
         const deviceName = deviceTitle
-        await sessionCollection.insertOne({issuedAt, deviceId, IP, deviceName, userId, refreshToken})
+        const lastActivityDate = issuedAt
+        await sessionCollection.insertOne({issuedAt, lastActivityDate, deviceId, ip, deviceName, userId, refreshToken})
         return
     }
-    static async updateSession(IP: string,
+    static async updateSession(ip: string,
+                               issuedAt: string,
                                deviceId: string,
                                deviceTitle: string,
                                userId: ObjectId,
                                refreshToken: string) {
-        const issuedAt = new Date().toISOString()
+        const lastActivityDate = new Date().toISOString()
         const deviceName = deviceTitle
-        await sessionCollection.updateOne({deviceId: deviceId}, {issuedAt, deviceId, IP, deviceName, userId, refreshToken})
+        await sessionCollection.updateOne({deviceId: deviceId}, {issuedAt, lastActivityDate, deviceId, ip, deviceName, userId, refreshToken})
         return
     }
     static async getSessionsByUserId(userId: ObjectId) {
-        return await sessionCollection.find({userId: userId}).toArray()
+        const sessions = await sessionCollection.find({userId: userId}).toArray()
+        return sessions.map(sessionMapper)
     }
 
     static async deleteSesssions(userId: ObjectId, deviceId: string) {

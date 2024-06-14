@@ -2,7 +2,6 @@ import {Router, Request, Response} from "express";
 import {jwtService} from "../../application/jwt-service";
 import {SessionsRepository} from "../../repositories/security-devices-repository";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
-import {log} from "util";
 import {SecurityService} from "../../services/security-service";
 
 export const securityRoute = Router({})
