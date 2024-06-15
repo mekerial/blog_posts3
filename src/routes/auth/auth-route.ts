@@ -15,7 +15,7 @@ import {registrationMiddleWare} from "../../middlewares/auth/registration-middle
 import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
 import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
 import {SecurityService} from "../../services/security-service";
-import {limiter, loginLimiter} from "../../middlewares/auth/limiter-middleware";
+import {registrationLimiter, loginLimiter, emailLimiter} from "../../middlewares/auth/limiter-middleware";
 
 
 export const authRoute = Router({})
@@ -68,7 +68,7 @@ authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Re
     res.send(userMe)
     console.log('success get request | auth/me')
 })
-authRoute.post('/registration', limiter, registrationMiddleWare(), userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
+authRoute.post('/registration', registrationLimiter, registrationMiddleWare(), userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
     const user = {
         accountData: {
             login: req.body.login,
@@ -99,7 +99,7 @@ authRoute.post('/registration', limiter, registrationMiddleWare(), userValidatio
 
     res.sendStatus(204);
 })
-authRoute.post('/registration-confirmation', limiter, emailConfirmationByCodeMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
+authRoute.post('/registration-confirmation', registrationLimiter, emailConfirmationByCodeMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
     console.log('post on /registration-confirmation')
     const emailCode = req.body.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
@@ -121,7 +121,7 @@ authRoute.post('/registration-confirmation', limiter, emailConfirmationByCodeMid
         return
     }
 })
-authRoute.post('/registration-email-resending', loginLimiter, emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
+authRoute.post('/registration-email-resending', emailLimiter, emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
     const email = req.body.email
     const user = await UserRepository.findUserByLoginOrEmail(email)
 
