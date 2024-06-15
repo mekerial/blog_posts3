@@ -15,14 +15,15 @@ import {registrationMiddleWare} from "../../middlewares/auth/registration-middle
 import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
 import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
 import {SecurityService} from "../../services/security-service";
-import {limiter} from "../../middlewares/auth/limiter-middleware";
+import {limiter, loginLimiter} from "../../middlewares/auth/limiter-middleware";
 
 
 export const authRoute = Router({})
 
-authRoute.post('/login', limiter, async (req: RequestWithBody<LoginInputModel>, res: Response) => {
+authRoute.post('/login', loginLimiter, async (req: RequestWithBody<LoginInputModel>, res: Response) => {
     const loginOrEmail = req.body.loginOrEmail
     const password = req.body.password
+
     const deviceTitle = req.headers["user-agent"] || "new device"
     const IP = req.ip || "no ip"
 
@@ -51,9 +52,7 @@ authRoute.post('/login', limiter, async (req: RequestWithBody<LoginInputModel>, 
     res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: true})
     res.cookie('deviceId', deviceId, {httpOnly: true, secure: true})
 
-
     await SecurityService.createSession(IP, deviceTitle, deviceId, userId, refreshToken)
-
 
     res.status(200).send(accessToken)
     console.log('post request | auth/login')
