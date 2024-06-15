@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import dotenv from "dotenv";
 import {ObjectId} from "mongodb";
 import {refreshTokenCollection} from "../db/db";
+import {SessionsRepository} from "../repositories/security-devices-repository";
 dotenv.config()
 
 export const jwtService = {
@@ -82,6 +83,18 @@ export const jwtService = {
                 const newRefreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
                 await refreshTokenCollection.deleteOne({refreshToken: refreshToken})
+
+                const session = await SessionsRepository.getSessionByRefreshToken(refreshToken)
+                console.log("updating session in jwt")
+                await SessionsRepository.updateSession(
+                    session!.ip,
+                    session!.issuedAt,
+                    session!.deviceId,
+                    session!.deviceName,
+                    session!.userId,
+                    refreshToken,
+                    newRefreshToken
+                )
 
                 console.log('success update tokens!')
 

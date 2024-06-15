@@ -15,6 +15,7 @@ import {registrationMiddleWare} from "../../middlewares/auth/registration-middle
 import {emailConfirmationByCodeMiddleWare} from "../../middlewares/auth/email-confirmation-by-code-middleware";
 import {emailConfirmationByEmailMiddleWare} from "../../middlewares/auth/email-confirmation-by-email-middleware";
 import {SecurityService} from "../../services/security-service";
+import {limiter} from "../../middlewares/auth/limiter-middleware";
 
 
 export const authRoute = Router({})
@@ -52,7 +53,6 @@ authRoute.post('/login', async (req: RequestWithBody<LoginInputModel>, res: Resp
 
 
     await SecurityService.createSession(IP, deviceTitle, deviceId, userId, refreshToken)
-    console.log(IP)
 
 
     res.status(200).send(accessToken)
@@ -69,7 +69,7 @@ authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Re
     res.send(userMe)
     console.log('success get request | auth/me')
 })
-authRoute.post('/registration', registrationMiddleWare(), userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
+authRoute.post('/registration', limiter, registrationMiddleWare(), userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
     const user = {
         accountData: {
             login: req.body.login,
@@ -170,12 +170,13 @@ authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, 
         res.sendStatus(401)
         return
     }
-    const newAccessTokenPromise = updateTokens.accessToken
-    const newRefreshTokenPromise = updateTokens.refreshToken
+    const newAccessToken = updateTokens.accessToken
+    const newRefreshToken = updateTokens.refreshToken
 
-    res.cookie('refreshToken', newRefreshTokenPromise, {httpOnly: true, secure: true})
+
+    res.cookie('refreshToken', newRefreshToken, {httpOnly: true, secure: true})
     res.status(200)
-    res.send({ accessToken: newAccessTokenPromise })
+    res.send({ accessToken: newAccessToken })
 })
 authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) => {
     const refreshToken = req.cookies.refreshToken
@@ -183,6 +184,12 @@ authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) =>
     const logout = await jwtService.revokeRefreshToken(refreshToken)
     if (!logout) {
         res.sendStatus(401)
+        return
+    }
+
+    const result = await SecurityService.deleteSessionByRefreshToken(refreshToken)
+    if (!result) {
+        res.sendStatus(404)
         return
     }
 
