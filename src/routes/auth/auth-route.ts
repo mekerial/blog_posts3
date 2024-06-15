@@ -121,7 +121,7 @@ authRoute.post('/registration-confirmation', limiter, emailConfirmationByCodeMid
         return
     }
 })
-authRoute.post('/registration-email-resending', limiter, emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
+authRoute.post('/registration-email-resending', loginLimiter, emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
     const email = req.body.email
     const user = await UserRepository.findUserByLoginOrEmail(email)
 
