@@ -1,5 +1,5 @@
-import {commentCollection, postCollection} from "../db/db";
-import {commentMapper} from "../models/comments/mappers/mapper";
+import {commentModel, postModel} from "../db/db";
+import {transformCommentDB} from "../models/comments/mappers/mapper";
 import {CreateCommentModel, QueryCommentInputModel} from "../models/comments/input";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
@@ -22,16 +22,16 @@ export class CommentRepository {
         const sortBy = sortData.sortBy ?? 'createdAt'
         const sortDirection = sortData.sortDirection ?? 'desc'
 
-        const comments = await commentCollection
+        const comments = await commentModel
             .find({postId: postId})
             .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((+pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .toArray()
+            .lean()
 
-        const allComments = await commentCollection
+        const allComments = await commentModel
             .find({postId: postId})
-            .toArray()
+            .lean()
         const totalCount = allComments.length
 
         const pagesCount = Math.ceil(totalCount / pageSize)
@@ -41,12 +41,12 @@ export class CommentRepository {
             page: +pageNumber,
             pageSize: pageSize,
             totalCount,
-            items: comments.map(commentMapper)
+            items: comments.map(transformCommentDB)
         }
 
     }
     static async createComment(postId: string, content: string, user: OutputUserModel) {
-        const post = await postCollection.findOne({_id: new ObjectId(postId)})
+        const post = await postModel.findOne({_id: new ObjectId(postId)})
         if (!post){
             return null
         }
@@ -58,24 +58,27 @@ export class CommentRepository {
             },
             createdAt: new Date().toISOString()
         }
-        const newComment = await commentCollection.insertOne({...comment, postId: postId})
+        const newComment = await commentModel.insertMany([{...comment, postId: postId}])
+
+        const insertedComment = newComment[0];
+        const insertedId = insertedComment._id;
 
         return {
             ...comment,
-            id: newComment.insertedId
+            id: insertedId
         }
     }
     static async getCommentById(id: string): Promise<OutputCommentModel | null> {
-        const comment = await commentCollection.findOne({_id: new ObjectId(id)})
+        const comment = await commentModel.findOne({_id: new ObjectId(id)})
 
         if (!comment) {
             return null
         }
 
-        return commentMapper(comment)
+        return transformCommentDB(comment)
     }
     static async updateComment(id: string, updateData: CreateCommentModel) {
-        const comment = await commentCollection.updateOne({_id: new ObjectId(id)}, {
+        const comment = await commentModel.updateOne({_id: new ObjectId(id)}, {
             $set: {
                 content: updateData.content
             }
@@ -84,7 +87,7 @@ export class CommentRepository {
         return !!comment.matchedCount
     }
     static async deleteComment(id: string): Promise<boolean> {
-        const comment = await commentCollection.deleteOne({_id: new ObjectId(id)})
+        const comment = await commentModel.deleteOne({_id: new ObjectId(id)})
 
         return !!comment.deletedCount
     }

@@ -1,7 +1,8 @@
 import {commentatorInfo} from "../db/db-types";
+import {ObjectId} from "mongodb";
 
 export type OutputCommentModel = {
-    id: string,
+    id: ObjectId,
     content: string,
     commentatorInfo: commentatorInfo,
     createdAt: string

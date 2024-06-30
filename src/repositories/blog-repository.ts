@@ -1,6 +1,6 @@
-import {blogCollection, postCollection} from "../db/db";
+//import {blogCollection, postCollection} from "../db/db";
 import {OutputBlogModel} from "../models/blogs/output";
-import {blogMapper} from "../models/blogs/mappers/mapper";
+import {blogMapper, transformBlogDB} from "../models/blogs/mappers/mapper";
 import {ObjectId} from "mongodb";
 import {
     CreateBlogModel,
@@ -9,7 +9,8 @@ import {
     QueryPostByBlogIdInputModel,
     UpdateBlogModel
 } from "../models/blogs/input";
-import {postMapper} from "../models/posts/mappers/mapper";
+import {transformPostDB} from "../models/posts/mappers/mapper";
+import {blogModel, postModel} from "../db/db";
 
 
 export class BlogRepository {
@@ -30,14 +31,15 @@ export class BlogRepository {
             }
         }
 
-        const blogs = await blogCollection
+        const blogs = await blogModel
             .find(filter)
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .toArray()
+            .lean()
 
-        const totalCount = await blogCollection.countDocuments(filter)
+
+        const totalCount = await blogModel.countDocuments(filter)
 
         const pagesCount = Math.ceil(totalCount / +pageSize)
 
@@ -45,7 +47,7 @@ export class BlogRepository {
             page: +pageNumber,
             pageSize: +pageSize,
             totalCount,
-            items: blogs.map(blogMapper)
+            items: blogs.map(transformBlogDB)
         }
     }
     static async getPostsByBlogId(blogId: string, sortData: QueryPostByBlogIdInputModel) {
@@ -54,14 +56,14 @@ export class BlogRepository {
         const pageNumber = sortData.pageNumber ?? 1
         const pageSize = sortData.pageSize ?? 10
 
-        const posts = await postCollection
+        const posts = await postModel
             .find({blogId: blogId})
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .toArray()
+            .lean()
 
-        const totalCount = await postCollection
+        const totalCount = await postModel
             .countDocuments({blogId: blogId})
 
         const pagesCount = Math.ceil(totalCount / +pageSize)
@@ -70,7 +72,7 @@ export class BlogRepository {
             page: +pageNumber,
             pageSize: +pageSize,
             totalCount,
-            items: posts.map(postMapper)
+            items: posts.map(transformPostDB)
         }
     }
     static async createPostToBlog(blogId: string, postData: CreatePostBlogModel) {
@@ -85,30 +87,34 @@ export class BlogRepository {
             createdAt: (new Date).toISOString()
         }
 
-        const res = await postCollection.insertOne(post)
+        const res = await postModel.insertMany([post])
 
-        return res.insertedId
+        return true //res.insertedId
     }
-    static async getBlogById(id: string): Promise<OutputBlogModel | null> {
-        const blog = await blogCollection.findOne({_id: new ObjectId(id)})
+    static async getBlogById(id: string) {
+        const blog = await blogModel.findOne({_id: new ObjectId(id)})
         if (!blog) {
             return null
         }
-        return blogMapper(blog)
+        return transformBlogDB(blog)
     }
     static async createBlog(createdData: CreateBlogModel): Promise<OutputBlogModel> {
-
         const blog = {
             ...createdData,
             createdAt: new Date().toISOString(),
             isMembership: false
         }
-        const newBlog = await blogCollection.insertOne({...blog})
 
-        return blogMapper({...blog, _id: newBlog.insertedId})
+        const result = await blogModel.insertMany([blog]);
+
+        const insertedBlog = result[0];
+        const insertedId = insertedBlog._id;
+
+        return blogMapper({ ...blog, _id: insertedId });
     }
+
     static async updateBlog(id: string, updatedData: UpdateBlogModel): Promise<boolean> {
-        const blog = await blogCollection.updateOne({_id: new ObjectId(id)}, {
+        const blog = await blogModel.updateOne({_id: new ObjectId(id)}, {
             $set: {
                 name: updatedData.name,
                 description: updatedData.description,
@@ -118,7 +124,7 @@ export class BlogRepository {
         return !!blog.matchedCount;
     }
     static async deleteBlogById(id: string): Promise<boolean | null> {
-        const blog = await blogCollection.deleteOne({_id: new ObjectId(id)})
+        const blog = await blogModel.deleteOne({_id: new ObjectId(id)})
 
         return !!blog.deletedCount
     }

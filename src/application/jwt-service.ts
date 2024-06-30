@@ -2,7 +2,7 @@ import {refreshTokenDbType} from "../models/db/db-types";
 import jwt from 'jsonwebtoken'
 import dotenv from "dotenv";
 import {ObjectId} from "mongodb";
-import {refreshTokenCollection} from "../db/db";
+import {refreshTokenModel} from "../db/db";
 import {SessionsRepository} from "../repositories/security-devices-repository";
 dotenv.config()
 
@@ -27,14 +27,14 @@ export const jwtService = {
             refreshToken: jwt.sign({userId: userId, deviceId: deviceId}, process.env.REFRESH_SECRET!, {expiresIn: '20000'})
         }
 
-        await refreshTokenCollection.insertOne(refreshTokenWithId)
+        await refreshTokenModel.insertMany([refreshTokenWithId])
         return refreshTokenWithId.refreshToken
     },
 
     async getUserIdByRefreshToken(refreshToken: string) {
         try {
             const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
-            const getRefreshToken = await refreshTokenCollection.find({refreshToken: refreshToken})
+            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken})
 
             if (getRefreshToken) {
                 return new ObjectId(result.userId)
@@ -50,7 +50,7 @@ export const jwtService = {
     async getDeviceIdByRefreshToken(refreshToken: string) {
         try {
             const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
-            const getRefreshToken = await refreshTokenCollection.find({refreshToken: refreshToken})
+            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken})
 
             if (getRefreshToken) {
                 return result.deviceId
@@ -64,7 +64,7 @@ export const jwtService = {
     },
 
     async updateAccessTokenByRefreshToken(refreshToken: string, deviceId: string) {
-        const result: refreshTokenDbType | null = await refreshTokenCollection.findOne({refreshToken: refreshToken})
+        const result: refreshTokenDbType | null = await refreshTokenModel.findOne({refreshToken: refreshToken})
         if (!result) {
             return null
         }
@@ -82,7 +82,7 @@ export const jwtService = {
                 const newAccessToken = await jwtService.createJWT(userId)
                 const newRefreshToken = await jwtService.createRefreshToken(userId, deviceId)
 
-                await refreshTokenCollection.deleteOne({refreshToken: refreshToken})
+                await refreshTokenModel.deleteOne({refreshToken: refreshToken})
 
                 const session = await SessionsRepository.getSessionByRefreshToken(refreshToken)
                 console.log("updating session in jwt")
@@ -114,7 +114,7 @@ export const jwtService = {
     },
 
     async revokeRefreshToken(refreshToken: string) {
-        const result = await refreshTokenCollection.findOne({refreshToken: refreshToken})
+        const result = await refreshTokenModel.findOne({refreshToken: refreshToken})
         if (!result) {
             return null
         }
@@ -128,7 +128,7 @@ export const jwtService = {
             try {
                 const verifyToken: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
 
-                await refreshTokenCollection.deleteOne({refreshToken: refreshToken})
+                await refreshTokenModel.deleteOne({refreshToken: refreshToken})
 
                 console.log('success delete token! logout')
 

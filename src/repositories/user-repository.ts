@@ -1,8 +1,9 @@
 import {CreateUserWithHash, QueryUserInputModel} from "../models/users/input";
-import {userCollection} from "../db/db";
-import {userMapper} from "../models/users/mappers/user-mapper";
-import {ObjectId} from "mongodb";
+import {userModel} from "../db/db";
+import {transformUserDB, userMapper} from "../models/users/mappers/user-mapper";
+import {ObjectId, WithId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
+import {UserDbType} from "../models/db/db-types";
 
 export class UserRepository {
     static async getAllUsers(sortData: QueryUserInputModel) {
@@ -41,15 +42,14 @@ export class UserRepository {
             filter = filterOptions[0]
         }
 
-        const users = await userCollection
+        const users = await userModel
             .find(filter)
             .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1})
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .map(userMapper)
-            .toArray()
+            .lean()
 
-        const totalCount = await userCollection.countDocuments(filter)
+        const totalCount = await userModel.countDocuments(filter)
 
         const pagesCount = Math.ceil(totalCount / +pageSize)
 
@@ -58,18 +58,22 @@ export class UserRepository {
             pageSize: +pageSize,
             pagesCount,
             totalCount,
-            items: users
+            items: users.map(transformUserDB)
         }
     }
     static async getUserById(id: ObjectId): Promise<OutputUserModel | null> {
-        const user = await userCollection.findOne({_id: new ObjectId(id)})
+        const user = await userModel.findOne({_id: new ObjectId(id)})
         if (!user) {
             return null
         }
-        return userMapper(user)
+        return transformUserDB(user)
     }
-    static async findUserByLoginOrEmail(LoginOrEmail: string) {
-        return await userCollection.findOne({$or: [{"accountData.email": LoginOrEmail}, {"accountData.login": LoginOrEmail}]})
+    static async findUserByLoginOrEmail(LoginOrEmail: string): Promise<WithId<UserDbType> | null> {
+        const user = await userModel.findOne({$or: [{"accountData.email": LoginOrEmail}, {"accountData.login": LoginOrEmail}]});
+        if (!user) {
+            return null
+        }
+        return user.toObject()
     }
     static async createUser(createdData: CreateUserWithHash) {
 
@@ -77,25 +81,32 @@ export class UserRepository {
             ...createdData,
         }
 
-        const newUser = await userCollection.insertOne({...user})
+        const newUser = await userModel.insertMany([{...user}])
 
-        return userMapper({...user, _id: newUser.insertedId})
+        const insertedUser = newUser[0]
+        const insertedId = insertedUser._id
+
+        return userMapper({...user, _id: insertedId})
     }
     static async deleteUserById(id: string): Promise<boolean | null> {
-        const user = await userCollection.deleteOne({_id: new ObjectId(id)})
+        const user = await userModel.deleteOne({_id: new ObjectId(id)})
 
         return !!user.deletedCount
     }
-    static async getUserByVerifyCode(code: string) {
-        return await userCollection.findOne({'emailConfirmation.confirmationCode': code})
+    static async getUserByVerifyCode(code: string): Promise<WithId<UserDbType> | null> {
+        const user = await userModel.findOne({'emailConfirmation.confirmationCode': code});
+        if (!user) {
+            return null
+        }
+        return user.toObject()
     }
     static async updateConfirmation(_id: ObjectId) {
-        const result = await userCollection.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})
+        const result = await userModel.updateOne({_id}, {$set: {'emailConfirmation.isConfirmed': true}})
         return result.modifiedCount === 1
     }
     static async recoveryConfirmationVerifyCode(_id: ObjectId, code: string, date: Date) {
-        await userCollection.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
-        await userCollection.updateOne({_id}, {$set: {'emailConfirmation.expirationDate': date}})
+        await userModel.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
+        await userModel.updateOne({_id}, {$set: {'emailConfirmation.expirationDate': date}})
         console.log('success update verify code')
         return true
     }

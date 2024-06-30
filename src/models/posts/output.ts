@@ -1,5 +1,7 @@
+import {ObjectId} from "mongodb";
+
 export type OutputPostModel = {
-    id: string,
+    id: ObjectId,
     title: string,
     shortDescription: string,
     content: string,

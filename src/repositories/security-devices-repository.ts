@@ -1,10 +1,11 @@
-import {sessionCollection} from "../db/db";
+import {sessionModel} from "../db/db";
 import {ObjectId} from "mongodb";
-import {sessionMapper} from "../models/sessions/mappers/mapper";
+import {transformSessionDB} from "../models/sessions/mappers/mapper";
+import {sessionDbType} from "../models/db/db-types";
 
 export class SessionsRepository {
     static async getSessionByDeviceId(deviceId: string) {
-        return await sessionCollection.findOne({deviceId: deviceId})
+        return await sessionModel.findOne({deviceId: deviceId})
     }
     static async createSession(ip: string,
                                deviceId: string,
@@ -14,11 +15,15 @@ export class SessionsRepository {
         const issuedAt = new Date().toISOString()
         const deviceName = deviceTitle
         const lastActivityDate = issuedAt
-        await sessionCollection.insertOne({issuedAt, lastActivityDate, deviceId, ip, deviceName, userId, refreshToken})
+        await sessionModel.insertMany([{issuedAt, lastActivityDate, deviceId, ip, deviceName, userId, refreshToken}])
         return
     }
-    static async getSessionByRefreshToken(refreshToken: string) {
-        return await sessionCollection.findOne({refreshToken: refreshToken})
+    static async getSessionByRefreshToken(refreshToken: string): Promise<sessionDbType | null> {
+        const result = await sessionModel.findOne({refreshToken: refreshToken});
+        if (!result) {
+            return null
+        }
+        return result.toObject()
     }
     static async updateSession(ip: string,
                                issuedAt: string,
@@ -30,7 +35,7 @@ export class SessionsRepository {
         console.log('updating session')
         const lastActivityDate = new Date().toISOString()
         const deviceName = deviceTitle
-        const sessionId = await sessionCollection.findOne({refreshToken: refreshToken})
+        const sessionId = await sessionModel.findOne({refreshToken: refreshToken})
 
         if (!sessionId) {
             console.log("not found session")
@@ -38,7 +43,7 @@ export class SessionsRepository {
         }
 
         console.log("updating session5")
-        const result = await sessionCollection.updateOne(
+        const result = await sessionModel.updateOne(
             { refreshToken: refreshToken },
             {
                 $set: {
@@ -57,21 +62,21 @@ export class SessionsRepository {
     }
 
     static async getSessionsByUserId(userId: ObjectId) {
-        const sessions = await sessionCollection.find({userId: userId}).toArray()
-        return sessions.map(sessionMapper)
+        const sessions = await sessionModel.find({userId: userId}).lean()
+        return sessions.map(transformSessionDB)
     }
 
     static async deleteSessions(userId: ObjectId, refreshToken: string) {
-        await sessionCollection.deleteMany({userId: userId, refreshToken: {$ne: refreshToken}})
+        await sessionModel.deleteMany({userId: userId, refreshToken: {$ne: refreshToken}})
     }
 
     static async deleteSession(userId: ObjectId, deviceId: string) {
-        const isDel = await sessionCollection.deleteOne({userId: userId, deviceId: deviceId})
+        const isDel = await sessionModel.deleteOne({userId: userId, deviceId: deviceId})
         return isDel.deletedCount!!
     }
 
     static async deleteSessionByRefreshToken(refreshToken: string) {
-        const result = await sessionCollection.deleteOne({refreshToken: refreshToken})
+        const result = await sessionModel.deleteOne({refreshToken: refreshToken})
         return result.deletedCount!!
     }
 }

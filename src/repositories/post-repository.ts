@@ -1,5 +1,5 @@
-import {blogCollection, postCollection} from "../db/db";
-import {postMapper} from "../models/posts/mappers/mapper";
+import {postModel} from "../db/db";
+import {transformPostDB} from "../models/posts/mappers/mapper";
 import {ObjectId} from "mongodb";
 import {OutputPostModel} from "../models/posts/output";
 import {CreatePostModel, QueryPostInputModel, UpdatePostModel} from "../models/posts/input";
@@ -12,14 +12,14 @@ export class PostRepository {
         const sortBy = sortData.sortBy ?? 'createdAt'
         const sortDirection = sortData.sortDirection ?? 'desc'
 
-        const posts = await postCollection
+        const posts = await postModel
             .find({})
             .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((+pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .toArray()
+            .lean()
 
-        const totalCount = await postCollection.countDocuments({})
+        const totalCount = await postModel.countDocuments({})
 
         const pagesCount = Math.ceil(totalCount / pageSize)
 
@@ -28,33 +28,40 @@ export class PostRepository {
             page: +pageNumber,
             pageSize: pageSize,
             totalCount,
-            items: posts.map(postMapper)
+            items: posts.map(transformPostDB)
         }
     }
 
     static async getPostById(id: string) {
-        const post = await postCollection.findOne({_id: new ObjectId(id)})
+        const post = await postModel.findOne({_id: new ObjectId(id)})
         if (!post) {
             return false
         }
-        return postMapper(post)
+        return transformPostDB(post)
     }
 
-    static async createPost(createdData: CreatePostModel): Promise<OutputPostModel | undefined>  {
-        const blog = await blogCollection.findOne({_id: new ObjectId(createdData.blogId)})
+    static async createPost(createdData: CreatePostModel): Promise<OutputPostModel | undefined> {
+        const findBlog = await postModel.findOne({_id: new ObjectId(createdData.blogId)});
+        if (!findBlog) {
+            return undefined
+        }
+        const blog = findBlog.toObject()
 
         const post = {
             ...createdData,
-            blogName: blog!.name,
+            blogName: blog!.blogName,
             createdAt: new Date().toISOString()
         }
 
-        const newPost = await postCollection.insertOne({...post})
+        const newPost = await postModel.insertMany([{...post}])
 
-        return postMapper({...post, _id: newPost.insertedId})
+        const insertedPost = newPost[0];
+        const insertedId = insertedPost._id;
+
+        return transformPostDB({...post, _id: insertedId})
     }
     static async updatePost(id: string, updatedData: UpdatePostModel): Promise<boolean> {
-        const post = await postCollection.updateOne({_id: new ObjectId(id)}, {
+        const post = await postModel.updateOne({_id: new ObjectId(id)}, {
             $set: {
                 title: updatedData.title,
                 shortDescription: updatedData.shortDescription,
@@ -68,7 +75,7 @@ export class PostRepository {
 
     static async deletePostById(id: string): Promise<boolean | null> {
 
-        const post = await postCollection.deleteOne({_id: new ObjectId(id)})
+        const post = await postModel.deleteOne({_id: new ObjectId(id)})
 
         return !!post.deletedCount;
     }

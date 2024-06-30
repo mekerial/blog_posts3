@@ -44,7 +44,7 @@ commentRoute.put('/:id', loginMiddleWare, commentValidation(), async (req: Reque
         return
     }
 
-    if (userId != usersCommentId!.commentatorInfo.userId) {
+    if (userId.toString() != usersCommentId!.commentatorInfo.userId) {
         res.sendStatus(403)
         return
     }
@@ -82,7 +82,7 @@ commentRoute.delete('/:id', loginMiddleWare, async (req: RequestWithParams<Param
         return
     }
 
-    if (userId != userComment.commentatorInfo.userId) {
+    if (userId.toString() != userComment.commentatorInfo.userId) {
         res.sendStatus(403)
         return
     }

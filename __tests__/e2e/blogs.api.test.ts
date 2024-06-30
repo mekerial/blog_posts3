@@ -16,12 +16,23 @@ const getRequest = () => {
 }
 describe(RouterPaths.blogs, () => {
     beforeAll(async () => {
-        getRequest().delete(RouterPaths.testing)
-    })
-    beforeEach(async () => {
-        getRequest().delete(RouterPaths.testing)
+        const createResponse = getRequest()
+            .delete(RouterPaths.testing)
+            .expect(204)
     })
 
+
+    //testing all data
+    it('drop database', async () => {
+        try {
+            const createResponse =  getRequest()
+                .delete(RouterPaths.testing)
+                .expect(204);
+        } catch (error) {
+            console.error('Error during test:', error);
+            throw error;
+        }
+    }, 10000);
 
     //get empty array
     it('should return empty array', async () => {
