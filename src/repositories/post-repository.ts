@@ -3,6 +3,7 @@ import {transformPostDB} from "../models/posts/mappers/mapper";
 import {ObjectId} from "mongodb";
 import {OutputPostModel} from "../models/posts/output";
 import {CreatePostModel, QueryPostInputModel, UpdatePostModel} from "../models/posts/input";
+import mongoose from 'mongoose';
 
 
 export class PostRepository {
@@ -33,19 +34,22 @@ export class PostRepository {
     }
 
     static async getPostById(id: string) {
-        const post = await postModel.findOne({_id: new ObjectId(id)})
-        if (!post) {
+        const postId = new mongoose.Types.ObjectId(id);
+        const post = await postModel.find({_id: postId}).lean()
+        if (!post[0]) {
             return false
         }
-        return transformPostDB(post)
+        return transformPostDB(post[0])
     }
 
     static async createPost(createdData: CreatePostModel): Promise<OutputPostModel | undefined> {
-        const findBlog = await postModel.findOne({_id: new ObjectId(createdData.blogId)});
-        if (!findBlog) {
+        const blogId = new mongoose.Types.ObjectId(createdData.blogId);
+
+        const findBlog = await postModel.find({_id: blogId}).lean();
+        if (!findBlog[0]) {
             return undefined
         }
-        const blog = findBlog.toObject()
+        const blog = findBlog[0]
 
         const post = {
             ...createdData,

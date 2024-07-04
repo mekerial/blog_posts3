@@ -2,7 +2,7 @@ import {
     DBType,
 
 } from "../models/db/db-types";
-import {MongoClient, ObjectId} from "mongodb";
+import {ObjectId} from "mongodb";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 

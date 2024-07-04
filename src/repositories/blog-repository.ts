@@ -1,4 +1,3 @@
-//import {blogCollection, postCollection} from "../db/db";
 import {OutputBlogModel} from "../models/blogs/output";
 import {blogMapper, transformBlogDB} from "../models/blogs/mappers/mapper";
 import {ObjectId} from "mongodb";
@@ -11,7 +10,7 @@ import {
 } from "../models/blogs/input";
 import {transformPostDB} from "../models/posts/mappers/mapper";
 import {blogModel, postModel} from "../db/db";
-
+import mongoose from 'mongoose';
 
 export class BlogRepository {
     static async getAllBlogs(sortData: QueryBlogInputModel) {
@@ -91,13 +90,21 @@ export class BlogRepository {
 
         return true //res.insertedId
     }
+
+
     static async getBlogById(id: string) {
-        const blog = await blogModel.findOne({_id: new ObjectId(id)})
-        if (!blog) {
-            return null
+
+        const blogId = new mongoose.Types.ObjectId(id);
+
+        const blog = await blogModel.find({ _id: blogId }).lean();
+        console.log(blog[0])
+        if (!blog[0]) {
+            return null;
         }
-        return transformBlogDB(blog)
+
+        return transformBlogDB(blog[0]);
     }
+
     static async createBlog(createdData: CreateBlogModel): Promise<OutputBlogModel> {
         const blog = {
             ...createdData,
@@ -114,12 +121,14 @@ export class BlogRepository {
     }
 
     static async updateBlog(id: string, updatedData: UpdateBlogModel): Promise<boolean> {
+        console.log('updating blog')
         const blog = await blogModel.updateOne({_id: new ObjectId(id)}, {
             $set: {
                 name: updatedData.name,
                 description: updatedData.description,
                 websiteUrl: updatedData.websiteUrl
         }})
+        console.log('blog updated')
 
         return !!blog.matchedCount;
     }

@@ -147,17 +147,20 @@ blogRoute.post('/:id/posts', authMiddleware, async (req: RequestWithBodyAndParam
     res.status(201).send(post)
 })
 blogRoute.put('/:id', authMiddleware, blogValidation(), async (req: RequestWithBodyAndParams<Params, any>, res: Response) => {
+    console.log('put /blogs')
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
         res.sendStatus(404)
         return;
     }
+    console.log('id is valid')
 
     const name = req.body.name
     const description = req.body.description
     const websiteUrl = req.body.websiteUrl
 
+    console.log('getting blog by id')
     const blog = await BlogRepository.getBlogById(id)
 
     if (!blog) {
@@ -165,6 +168,7 @@ blogRoute.put('/:id', authMiddleware, blogValidation(), async (req: RequestWithB
         return
     }
 
+    console.log('updating blog by id')
     const isBlogUpdated = await BlogRepository.updateBlog(id, {name, description, websiteUrl})
 
     if (isBlogUpdated) {

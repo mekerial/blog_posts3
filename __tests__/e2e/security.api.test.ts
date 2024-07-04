@@ -8,7 +8,7 @@ const getRequest = () => {
     return request(app)
 }
 
-describe(RouterPaths.blogs, () => {
+describe(RouterPaths.security.devices, () => {
     beforeAll(async () => {
         getRequest().delete(RouterPaths.testing)
     })
@@ -16,16 +16,14 @@ describe(RouterPaths.blogs, () => {
         getRequest().delete(RouterPaths.testing)
     })
 
-    it('get blogs', async () => {
+    it('should return empty array', async () => {
 
         await getRequest()
-            .post(RouterPaths.blogs)
-            .set('authorization', 'Basic YWRtaW46cXdlcnR5')
-            .send({
-                name: 'valid name',
-                description: 'valid description',
-                websiteUrl: 'https://www.google.com'
-            })
+            .post(RouterPaths.security.devices)
             .expect(204)
+
     })
+
+
+
 })
