@@ -1,11 +1,19 @@
 import {sessionModel} from "../db/db";
 import {ObjectId} from "mongodb";
-import {transformSessionDB} from "../models/sessions/mappers/mapper";
+import {mapperSessionDB, transformSessionDB} from "../models/sessions/mappers/mapper";
 import {sessionDbType} from "../models/db/db-types";
+import mongoose from "mongoose";
 
 export class SessionsRepository {
     static async getSessionByDeviceId(deviceId: string) {
-        return await sessionModel.findOne({deviceId: deviceId})
+        const deviceID = deviceId;
+
+        const leanElement = await sessionModel.find({deviceId: deviceID}).lean();
+
+        if (!leanElement[0]) {
+            return null
+        }
+        return leanElement[0]
     }
     static async createSession(ip: string,
                                deviceId: string,
@@ -14,16 +22,17 @@ export class SessionsRepository {
                                refreshToken: string) {
         const issuedAt = new Date().toISOString()
         const deviceName = deviceTitle
-        const lastActivityDate = issuedAt
-        await sessionModel.insertMany([{issuedAt, lastActivityDate, deviceId, ip, deviceName, userId, refreshToken}])
+        const lastActiveDate = issuedAt
+        await sessionModel.insertMany([{issuedAt, lastActiveDate, deviceId, ip, deviceName, userId, refreshToken}])
         return
     }
     static async getSessionByRefreshToken(refreshToken: string): Promise<sessionDbType | null> {
-        const result = await sessionModel.findOne({refreshToken: refreshToken});
-        if (!result) {
+        const result = await sessionModel.find({refreshToken: refreshToken}).lean();
+        if (!result[0]) {
             return null
         }
-        return result.toObject()
+        // @ts-ignore
+        return mapperSessionDB(result[0])
     }
     static async updateSession(ip: string,
                                issuedAt: string,
@@ -33,11 +42,11 @@ export class SessionsRepository {
                                refreshToken: string,
                                newRefreshToken: string) {
         console.log('updating session')
-        const lastActivityDate = new Date().toISOString()
+        const lastActiveDate = new Date().toISOString()
         const deviceName = deviceTitle
-        const sessionId = await sessionModel.findOne({refreshToken: refreshToken})
+        const sessionId = await sessionModel.find({refreshToken: refreshToken}).lean()
 
-        if (!sessionId) {
+        if (!sessionId[0]) {
             console.log("not found session")
             return
         }
@@ -48,7 +57,7 @@ export class SessionsRepository {
             {
                 $set: {
                     issuedAt,
-                    lastActivityDate,
+                    lastActiveDate,
                     deviceId,
                     ip,
                     deviceName,
@@ -61,7 +70,8 @@ export class SessionsRepository {
         return
     }
 
-    static async getSessionsByUserId(userId: ObjectId) {
+    static async getSessionsByUserId(id: ObjectId) {
+        const userId = new mongoose.Types.ObjectId(id);
         const sessions = await sessionModel.find({userId: userId}).lean()
         return sessions.map(transformSessionDB)
     }

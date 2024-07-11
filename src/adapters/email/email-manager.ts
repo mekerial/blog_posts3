@@ -1,6 +1,5 @@
 export const emailSubject = {
     confirmationRegistration: "Confirmation Registration",
-    passwordRecovery: "Password recovery",
-
+    passwordRecovery: "Password recovery"
 }
 

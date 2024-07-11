@@ -7,4 +7,3 @@ app.set('trust proxy', true)
 app.listen(port, async () => {
     await runDb()
 })
-

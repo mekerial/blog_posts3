@@ -10,6 +10,7 @@ securityRoute.get('/devices', async (req: Request, res: Response) => {
     console.log('get request | /devices')
     const refreshToken = req.cookies.refreshToken
     const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
+
     if (!userId) {
         res.sendStatus(401)
         return
@@ -40,9 +41,9 @@ securityRoute.delete('/devices', async (req: Request, res: Response) => {
 })
 
 securityRoute.delete('/devices/:id', async (req: RequestWithParams<string>, res: Response) => {
-    console.log(('delete request | /devices/:id'))
 
     const deviceId = req.params.id
+
     const deviceInDB = await SessionsRepository.getSessionByDeviceId(deviceId)
     if (!deviceInDB) {
         res.sendStatus(404)

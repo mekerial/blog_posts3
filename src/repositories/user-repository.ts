@@ -1,9 +1,12 @@
-import {CreateUserWithHash, QueryUserInputModel} from "../models/users/input";
-import {userModel} from "../db/db";
-import {transformUserDB, userMapper} from "../models/users/mappers/user-mapper";
+import {CreateUserWithHash, QueryUserInputModel, RecoveryPassword} from "../models/users/input";
+import {recoveryPasswordModel, userModel} from "../db/db";
+import {mapperUserDB, transformUserDB, userMapper} from "../models/users/mappers/user-mapper";
 import {ObjectId, WithId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
 import {UserDbType} from "../models/db/db-types";
+import mongoose from "mongoose";
+import {UserService} from "../services/user-service";
+import bcrypt from "bcrypt";
 
 export class UserRepository {
     static async getAllUsers(sortData: QueryUserInputModel) {
@@ -62,18 +65,20 @@ export class UserRepository {
         }
     }
     static async getUserById(id: ObjectId): Promise<OutputUserModel | null> {
-        const user = await userModel.findOne({_id: new ObjectId(id)})
-        if (!user) {
+        const userId = new mongoose.Types.ObjectId(id);
+        const user = await userModel.find({_id: userId}).lean()
+        if (!user[0]) {
             return null
         }
-        return transformUserDB(user)
+        return transformUserDB(user[0])
     }
     static async findUserByLoginOrEmail(LoginOrEmail: string): Promise<WithId<UserDbType> | null> {
-        const user = await userModel.findOne({$or: [{"accountData.email": LoginOrEmail}, {"accountData.login": LoginOrEmail}]});
-        if (!user) {
+
+        const user = await userModel.find({$or: [{"accountData.email": LoginOrEmail}, {"accountData.login": LoginOrEmail}]}).lean();
+        if (!user[0]) {
             return null
         }
-        return user.toObject()
+        return mapperUserDB(user[0])
     }
     static async createUser(createdData: CreateUserWithHash) {
 
@@ -107,7 +112,40 @@ export class UserRepository {
     static async recoveryConfirmationVerifyCode(_id: ObjectId, code: string, date: Date) {
         await userModel.updateOne({_id}, {$set: {'emailConfirmation.confirmationCode': code}})
         await userModel.updateOne({_id}, {$set: {'emailConfirmation.expirationDate': date}})
-        console.log('success update verify code')
+        console.log('success update confirmation verify code')
         return true
+    }
+    static async recoveryPasswordVerifyCode(_id: ObjectId, code: string, date: Date): Promise<WithId<RecoveryPassword> | boolean> {
+
+        const userRcvryPassword = await recoveryPasswordModel.find({UserId: _id}).lean()
+
+        if (!userRcvryPassword[0]) {
+            await recoveryPasswordModel.insertMany([{
+                UserId: _id,
+                recoveryCode: '',
+                expirationDate: ''
+            }])
+        }
+
+        await recoveryPasswordModel.updateOne({_id}, {$set: {'recoveryCode': code}})
+        await recoveryPasswordModel.updateOne({_id}, {$set: {'expirationDate': date}})
+        console.log('success update recovery password verify code')
+        return true
+    }
+
+    static async getRecoveryPasswordByVerifyCode(code: string) {
+        const recoveryPassword = await recoveryPasswordModel.findOne({'recoveryCode': code});
+        if (!recoveryPassword) {
+            return null
+        }
+        return recoveryPassword.toObject()
+    }
+    static async updatePassword(_id: ObjectId, newPassword: string) {
+        const passwordSalt = await bcrypt.genSalt(10)
+        const newPasswordHash = UserService.generateHash(newPassword, passwordSalt)
+
+        const result1 = await userModel.updateOne({_id}, {$set: {'accountData.passwordHash': newPasswordHash}})
+        const result2 = await userModel.updateOne({_id}, {$set: {'accountData.passwordSalt': passwordSalt}})
+        return result1.modifiedCount === 1 && result2.modifiedCount === 1
     }
 }

@@ -1,4 +1,3 @@
-import {refreshTokenDbType} from "../models/db/db-types";
 import jwt from 'jsonwebtoken'
 import dotenv from "dotenv";
 import {ObjectId} from "mongodb";
@@ -33,10 +32,11 @@ export const jwtService = {
 
     async getUserIdByRefreshToken(refreshToken: string) {
         try {
-            const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
-            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken})
 
-            if (getRefreshToken) {
+            const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
+            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken}).lean()
+
+            if (getRefreshToken[0]) {
                 return new ObjectId(result.userId)
             } else {
                 return null
@@ -50,9 +50,9 @@ export const jwtService = {
     async getDeviceIdByRefreshToken(refreshToken: string) {
         try {
             const result: any = jwt.verify(refreshToken, process.env.REFRESH_SECRET!)
-            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken})
+            const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken}).lean()
 
-            if (getRefreshToken) {
+            if (getRefreshToken[0]) {
                 return result.deviceId
             } else {
                 return null
@@ -64,13 +64,13 @@ export const jwtService = {
     },
 
     async updateAccessTokenByRefreshToken(refreshToken: string, deviceId: string) {
-        const result: refreshTokenDbType | null = await refreshTokenModel.findOne({refreshToken: refreshToken})
-        if (!result) {
+        const result = await refreshTokenModel.find({refreshToken: refreshToken}).lean()
+        if (!result[0]) {
             return null
         }
 
         const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
-        if (!userId || !(result.userId !== userId)) {
+        if (!userId || !(result[0].userId !== userId)) {
             console.log('1 unsuccess update tokens!')
             return null
         }
@@ -114,13 +114,13 @@ export const jwtService = {
     },
 
     async revokeRefreshToken(refreshToken: string) {
-        const result = await refreshTokenModel.findOne({refreshToken: refreshToken})
-        if (!result) {
+        const result = await refreshTokenModel.find({refreshToken: refreshToken}).lean()
+        if (!result[0]) {
             return null
         }
 
         const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
-        if (!userId || !(result.userId !== userId)) {
+        if (!userId || !(result[0].userId !== userId)) {
             return null
         }
 

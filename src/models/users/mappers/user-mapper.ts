@@ -35,3 +35,37 @@ export function transformUserDB(value: FlattenMaps<{
         createdAt: accountData.createdAt || '',
     };
 }
+
+
+export function mapperUserDB(value: FlattenMaps<{
+    accountData?: {
+        login?: string | null | undefined,
+        email?: string | null | undefined,
+        passwordHash?: string | null | undefined,
+        passwordSalt?: string | null | undefined,
+        createdAt?: string | null | undefined
+    } | null | undefined,
+    emailConfirmation?: {
+        confirmationCode?: string | null | undefined,
+        expirationDate?: Date | null | undefined,
+        isConfirmed?: boolean | null | undefined;
+    } | null | undefined
+}> & { _id: ObjectId }): WithId<UserDbType> {
+
+    const accountData = value.accountData || {};
+    return {
+        _id: value._id,
+        accountData: {
+            login: value.accountData?.login || '',
+            email: value.accountData?.email || '',
+            passwordHash: value.accountData?.passwordHash || '',
+            passwordSalt: value.accountData?.passwordSalt || '',
+            createdAt: value.accountData?.createdAt || '',
+        } || null || undefined,
+        emailConfirmation: {
+            confirmationCode: value.emailConfirmation?.confirmationCode || '',
+            expirationDate: value.emailConfirmation?.expirationDate!,
+            isConfirmed: value.emailConfirmation?.isConfirmed || false
+        } || null || undefined,
+    };
+}

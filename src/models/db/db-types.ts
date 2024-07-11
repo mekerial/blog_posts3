@@ -58,10 +58,11 @@ export type refreshTokenDbType = {
 
 export type sessionDbType = {
     issuedAt: string,
-    lastActivityDate: string,
+    lastActiveDate: string,
     deviceId: string,
     ip: string,
     deviceName: string,
     userId: ObjectId,
     refreshToken: string
 }
+

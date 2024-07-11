@@ -4,8 +4,14 @@ import {LoginInputModel} from "../../models/logins/input";
 import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
-import {userValidation} from "../../validators/user-validator";
-import {AccessTokenModel, CreateUserModel, EmailConfirmationCode, ResendingEmailModel} from "../../models/users/input";
+import {emailValidation, userValidation} from "../../validators/user-validator";
+import {
+    AccessTokenModel,
+    CreateUserModel,
+    EmailConfirmationCode,
+    RecoveryPassword,
+    ResendingEmailModel
+} from "../../models/users/input";
 import {emailAdapter} from "../../adapters/email/email-adapter";
 import {emailSubject} from "../../adapters/email/email-manager";
 import {v4 as uuidv4} from 'uuid'
@@ -193,4 +199,59 @@ authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) =>
     }
 
     res.sendStatus(204)
+})
+
+authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: RequestWithBody<{ email: string }>, res: Response) => {
+    const email = req.body.email
+    const user = await UserRepository.findUserByLoginOrEmail(email)
+
+    if (!user) {
+        res.sendStatus(404)
+        console.log('email not found')
+        return
+    }
+
+    const code = uuidv4()
+    const date = add(new Date(), {
+        // hours: 1
+        minutes: 30
+    })
+    await UserRepository.recoveryPasswordVerifyCode(user._id, code, date)
+
+    const result = await emailAdapter.sendEmail(email, emailSubject.passwordRecovery, `
+        <h1>Password recovery</h1>
+        <p>To recovery password use this link:
+        <a href='https://blog-posts3.onrender.com/new-password?code=${code}'>password recovery</a>
+        </p>
+    `);
+
+    if (!result) {
+        res.sendStatus(400)
+        console.log('not send password recovery letter')
+        return
+    }
+})
+authRoute.post('/new-password', registrationLimiter, async (req: RequestWithBody<RecoveryPassword>, res: Response) => {
+    console.log('post on /new-password')
+    const recoveryCode = req.body.recoveryCode
+    const newPassword = req.body.newPassword
+
+    const userRcvryCode = await UserRepository.getRecoveryPasswordByVerifyCode(recoveryCode)
+    if (!userRcvryCode) {
+        res.sendStatus(404)
+        return
+    }
+
+    if (recoveryCode === userRcvryCode!.recoveryCode && userRcvryCode!.expirationDate > new Date()) {
+        const result = await UserRepository.updatePassword(userRcvryCode.userId, newPassword)
+
+        if (!result) {
+            res.sendStatus(500)
+            return
+        }
+
+        console.log('was recovery password')
+        res.sendStatus(204)
+        return
+    }
 })

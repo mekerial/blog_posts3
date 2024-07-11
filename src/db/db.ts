@@ -55,11 +55,11 @@ const refreshTokenSchema = new mongoose.Schema({
 
 const sessionSchema = new mongoose.Schema({
         issuedAt: String,
-        lastActivityDate: String,
+        lastActiveDate: String,
         deviceId: String,
         ip: String,
         deviceName: String,
-        userId: ObjectId,
+        userId: String,
         refreshToken: String
     }
 )
@@ -77,6 +77,11 @@ const userSchema = new mongoose.Schema({
         isConfirmed: Boolean
     }
 })
+const RecoveryPasswordSchema = new mongoose.Schema({
+    userId: String,
+    recoveryCode: String,
+    expirationDate: String
+})
 
 export const blogModel = mongoose.model('blogs', blogSchema)
 export const postModel = mongoose.model('posts', postSchema)
@@ -84,6 +89,7 @@ export const userModel = mongoose.model('users', userSchema)
 export const commentModel = mongoose.model('comments', commentSchema)
 export const refreshTokenModel = mongoose.model('refreshTokens', refreshTokenSchema)
 export const sessionModel = mongoose.model('sessions', sessionSchema)
+export const recoveryPasswordModel = mongoose.model('recoveryPasswords', RecoveryPasswordSchema)
 
 
 

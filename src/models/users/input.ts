@@ -49,6 +49,10 @@ export type ResendingEmailModel = {
 export type EmailConfirmationCode = {
     code: string
 }
+export type RecoveryPassword = {
+    newPassword: string,
+    recoveryCode: string,
+}
 
 export type AccessTokenModel = {
     accessToken: string
