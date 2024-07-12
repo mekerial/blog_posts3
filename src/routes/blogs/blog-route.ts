@@ -26,6 +26,8 @@ import {OutputPostModel} from "../../models/posts/output";
 export const blogRoute = Router({})
 
 blogRoute.get('/', async (req: RequestWithQuery<QueryBlogInputModel>, res: Response) => {
+    console.log('get on /blogs')
+
     const sortData = {
         searchNameTerm: req.query.searchNameTerm,
         sortBy: req.query.sortBy,
@@ -38,6 +40,8 @@ blogRoute.get('/', async (req: RequestWithQuery<QueryBlogInputModel>, res: Respo
     res.send(blogs)
 })
 blogRoute.get('/:id', async (req: RequestWithParams<Params>, res: Response) => {
+    console.log('get on /blogs:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
@@ -55,6 +59,8 @@ blogRoute.get('/:id', async (req: RequestWithParams<Params>, res: Response) => {
     res.send(blog)
 })
 blogRoute.get('/:id/posts', async (req: RequestWithParamsAndQuery<Params, QueryPostByBlogIdInputModel>, res: Response) => {
+    console.log('get on /blogs/:id/posts')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
@@ -79,6 +85,8 @@ blogRoute.get('/:id/posts', async (req: RequestWithParamsAndQuery<Params, QueryP
     res.send(posts)
 })
 blogRoute.post('/:id/posts', authMiddleware, blogPostValidation(), async (req: RequestWithBodyAndParams<Params, CreatePostModel>, res: Response<OutputPostModel>) => {
+    console.log('post on /blogs/:id/posts')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
@@ -109,6 +117,8 @@ blogRoute.post('/:id/posts', authMiddleware, blogPostValidation(), async (req: R
     res.status(201).send(createdPost)
 })
 blogRoute.post('/', authMiddleware, blogValidation(), async (req: RequestWithBody<CreateBlogModel>, res: Response) => {
+    console.log('post on /blogs')
+
     const name = req.body.name
     const description = req.body.description
     const websiteUrl = req.body.websiteUrl
@@ -124,6 +134,8 @@ blogRoute.post('/', authMiddleware, blogValidation(), async (req: RequestWithBod
     res.status(201).send(createdBlog)
 })
 blogRoute.post('/:id/posts', authMiddleware, async (req: RequestWithBodyAndParams<{id: string}, CreatePostBlogModel>, res: Response) => {
+    console.log('post on /blogs/:id/posts')
+
     const title = req.body.title
     const shortDescription = req.body.shortDescription
     const content = req.body.content
@@ -147,20 +159,19 @@ blogRoute.post('/:id/posts', authMiddleware, async (req: RequestWithBodyAndParam
     res.status(201).send(post)
 })
 blogRoute.put('/:id', authMiddleware, blogValidation(), async (req: RequestWithBodyAndParams<Params, any>, res: Response) => {
-    console.log('put /blogs')
+    console.log('put /blogs/:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
         res.sendStatus(404)
         return;
     }
-    console.log('id is valid')
 
     const name = req.body.name
     const description = req.body.description
     const websiteUrl = req.body.websiteUrl
 
-    console.log('getting blog by id')
     const blog = await BlogRepository.getBlogById(id)
 
     if (!blog) {
@@ -168,7 +179,6 @@ blogRoute.put('/:id', authMiddleware, blogValidation(), async (req: RequestWithB
         return
     }
 
-    console.log('updating blog by id')
     const isBlogUpdated = await BlogRepository.updateBlog(id, {name, description, websiteUrl})
 
     if (isBlogUpdated) {
@@ -178,6 +188,8 @@ blogRoute.put('/:id', authMiddleware, blogValidation(), async (req: RequestWithB
     }
 })
 blogRoute.delete('/:id', authMiddleware, async (req: RequestWithParams<Params>, res: Response) => {
+    console.log('delete on /blogs/:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {

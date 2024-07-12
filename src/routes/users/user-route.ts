@@ -19,6 +19,8 @@ import {add} from "date-fns/add";
 export const userRoute = Router({})
 
 userRoute.get('/', authMiddleware, async (req: RequestWithQuery<QueryUserInputModel>, res: Response) => {
+    console.log('get on /users')
+
     const sortData = {
         sortBy: req.query.sortBy,
         sortDirection: req.query.sortDirection,
@@ -34,6 +36,8 @@ userRoute.get('/', authMiddleware, async (req: RequestWithQuery<QueryUserInputMo
 })
 
 userRoute.post('/', authMiddleware, userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
+    console.log('post on /users')
+
     const login = req.body.login
     const password = req.body.password
     const email = req.body.email
@@ -60,6 +64,8 @@ userRoute.post('/', authMiddleware, userValidation(), async (req: RequestWithBod
 })
 
 userRoute.delete('/:id', authMiddleware, async (req: RequestWithParams<Params>, res: Response) => {
+    console.log('delete on /users/:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {

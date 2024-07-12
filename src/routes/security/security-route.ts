@@ -7,7 +7,7 @@ import {RequestWithParams} from "../../common";
 export const securityRoute = Router({})
 
 securityRoute.get('/devices', async (req: Request, res: Response) => {
-    console.log('get request | /devices')
+    console.log('get on /devices')
     const refreshToken = req.cookies.refreshToken
     const userId = await jwtService.getUserIdByRefreshToken(refreshToken)
 
@@ -21,7 +21,7 @@ securityRoute.get('/devices', async (req: Request, res: Response) => {
     return
 })
 securityRoute.delete('/devices', async (req: Request, res: Response) => {
-    console.log(('delete request | /devices'))
+    console.log('delete on /devices')
 
     const refreshToken = req.cookies.refreshToken
     if (!refreshToken) {
@@ -41,6 +41,7 @@ securityRoute.delete('/devices', async (req: Request, res: Response) => {
 })
 
 securityRoute.delete('/devices/:id', async (req: RequestWithParams<string>, res: Response) => {
+    console.log('delete on /devices/:id')
 
     const deviceId = req.params.id
 

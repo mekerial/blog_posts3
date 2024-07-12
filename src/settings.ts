@@ -7,7 +7,15 @@ import {commentRoute} from "./routes/comments/comment-route";
 import {emailRoute} from "./routes/email/email-route";
 import cookieParser from "cookie-parser";
 import {securityRoute} from "./routes/security/security-route";
-import {blogModel, commentModel, postModel, refreshTokenModel, sessionModel, userModel} from "./db/db";
+import {
+    blogModel,
+    commentModel,
+    postModel,
+    recoveryPasswordModel,
+    refreshTokenModel,
+    sessionModel,
+    userModel
+} from "./db/db";
 
 export const app = express()
 
@@ -15,6 +23,8 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.delete('/testing/all-data', async (req: Request, res: Response) => {
+    console.log('!!!DATABASE IS DROPED!!!')
+
     // await database.dropDatabase()
 
     await blogModel.deleteMany({})
@@ -23,6 +33,7 @@ app.delete('/testing/all-data', async (req: Request, res: Response) => {
     await commentModel.deleteMany({})
     await refreshTokenModel.deleteMany({})
     await sessionModel.deleteMany({})
+    await recoveryPasswordModel.deleteMany({})
 
     res.sendStatus(204)
 })

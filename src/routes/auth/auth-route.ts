@@ -1,10 +1,14 @@
 import {Router, Response} from 'express';
-import {RequestWithBody, RequestWithQuery} from "../../common";
+import {RequestWithBody, RequestWithBodyAndQuery, RequestWithQuery} from "../../common";
 import {LoginInputModel} from "../../models/logins/input";
 import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
-import {emailValidation, userValidation} from "../../validators/user-validator";
+import {
+    emailValidation,
+    newPasswordValidation,
+    userValidation
+} from "../../validators/user-validator";
 import {
     AccessTokenModel,
     CreateUserModel,
@@ -27,6 +31,8 @@ import {registrationLimiter, loginLimiter, emailLimiter} from "../../middlewares
 export const authRoute = Router({})
 
 authRoute.post('/login', loginLimiter, async (req: RequestWithBody<LoginInputModel>, res: Response) => {
+    console.log('post on /auth/login')
+
     const loginOrEmail = req.body.loginOrEmail
     const password = req.body.password
 
@@ -64,6 +70,8 @@ authRoute.post('/login', loginLimiter, async (req: RequestWithBody<LoginInputMod
     console.log('post request | auth/login')
 })
 authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Response) => {
+    console.log('get on /auth/me')
+
     const userMe = {
         email: req.user!.email,
         login: req.user!.login,
@@ -75,6 +83,8 @@ authRoute.get('/me', loginMiddleWare, async (req: RequestWithQuery<any>, res: Re
     console.log('success get request | auth/me')
 })
 authRoute.post('/registration', registrationLimiter, registrationMiddleWare(), userValidation(), async (req: RequestWithBody<CreateUserModel>, res: Response) => {
+    console.log('post on /auth/registration')
+
     const user = {
         accountData: {
             login: req.body.login,
@@ -107,8 +117,10 @@ authRoute.post('/registration', registrationLimiter, registrationMiddleWare(), u
 })
 authRoute.post('/registration-confirmation', registrationLimiter, emailConfirmationByCodeMiddleWare(), async (req: RequestWithBody<EmailConfirmationCode>, res: Response) => {
     console.log('post on /registration-confirmation')
+
     const emailCode = req.body.code
     const user = await UserRepository.getUserByVerifyCode(emailCode)
+
     if (!user) {
         res.sendStatus(404)
         return
@@ -128,6 +140,8 @@ authRoute.post('/registration-confirmation', registrationLimiter, emailConfirmat
     }
 })
 authRoute.post('/registration-email-resending', emailLimiter, emailConfirmationByEmailMiddleWare(), async (req: RequestWithBody<ResendingEmailModel>, res: Response) => {
+    console.log('post on /auth/registration-email-resending')
+
     const email = req.body.email
     const user = await UserRepository.findUserByLoginOrEmail(email)
 
@@ -166,7 +180,8 @@ authRoute.post('/registration-email-resending', emailLimiter, emailConfirmationB
     res.sendStatus(204)
 })
 authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, res: Response) => {
-    console.log('/refresh-token')
+    console.log('psot on /refresh-token')
+
     const refreshToken = req.cookies.refreshToken
     const deviceId = req.cookies.deviceId
     const updateTokens = await jwtService.updateAccessTokenByRefreshToken(refreshToken, deviceId)
@@ -184,6 +199,8 @@ authRoute.post('/refresh-token', async (req: RequestWithBody<AccessTokenModel>, 
     res.send({ accessToken: newAccessToken })
 })
 authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) => {
+    console.log('post on /auth/logout')
+
     const refreshToken = req.cookies.refreshToken
 
     const logout = await jwtService.revokeRefreshToken(refreshToken)
@@ -202,11 +219,13 @@ authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) =>
 })
 
 authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: RequestWithBody<{ email: string }>, res: Response) => {
+    console.log('post on /password-recovery')
+
     const email = req.body.email
     const user = await UserRepository.findUserByLoginOrEmail(email)
 
     if (!user) {
-        res.sendStatus(404)
+        res.sendStatus(204)
         console.log('email not found')
         return
     }
@@ -221,7 +240,7 @@ authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: 
     const result = await emailAdapter.sendEmail(email, emailSubject.passwordRecovery, `
         <h1>Password recovery</h1>
         <p>To recovery password use this link:
-        <a href='https://blog-posts3.onrender.com/new-password?code=${code}'>password recovery</a>
+        <a href='https://cf98fe32045374.lhr.life/new-password?recoveryCode=${code}'>password recovery</a>
         </p>
     `);
 
@@ -233,18 +252,21 @@ authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: 
 
     res.sendStatus(204)
 })
-authRoute.post('/new-password', registrationLimiter, async (req: RequestWithBody<RecoveryPassword>, res: Response) => {
+authRoute.post('/new-password', registrationLimiter, newPasswordValidation, async (req: RequestWithBodyAndQuery<RecoveryPassword, { recoveryCode: string }>, res: Response) => {
     console.log('post on /new-password')
-    const recoveryCode = req.body.recoveryCode
+
+    const recoveryCode = req.query.recoveryCode
     const newPassword = req.body.newPassword
 
     const userRcvryCode = await UserRepository.getRecoveryPasswordByVerifyCode(recoveryCode)
     if (!userRcvryCode) {
+        console.log('recovery code not found')
         res.sendStatus(404)
         return
     }
 
     if (recoveryCode === userRcvryCode!.recoveryCode && userRcvryCode!.expirationDate! > new Date()) {
+
         const result = await UserRepository.updatePassword(userRcvryCode!.userId!, newPassword)
 
         if (!result) {

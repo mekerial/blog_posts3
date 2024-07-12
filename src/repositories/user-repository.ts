@@ -117,24 +117,28 @@ export class UserRepository {
     }
     static async recoveryPasswordVerifyCode(_id: ObjectId, code: string, date: Date): Promise<WithId<RecoveryPassword> | boolean> {
 
-        const userRcvryPassword = await recoveryPasswordModel.find({UserId: _id}).lean()
+        const userRcvryPassword = await recoveryPasswordModel.find({userId: _id}).lean()
 
         if (!userRcvryPassword[0]) {
             await recoveryPasswordModel.insertMany([{
-                UserId: _id,
+                userId: _id,
                 recoveryCode: '',
                 expirationDate: ''
             }])
         }
 
-        await recoveryPasswordModel.updateOne({_id}, {$set: {'recoveryCode': code}})
-        await recoveryPasswordModel.updateOne({_id}, {$set: {'expirationDate': date}})
+
+
+        await recoveryPasswordModel.updateOne({userId: _id}, {$set: {'recoveryCode': code,
+                                                                        'expirationDate': date}})
         console.log('success update recovery password verify code')
         return true
     }
 
     static async getRecoveryPasswordByVerifyCode(code: string) {
+
         const recoveryPassword = await recoveryPasswordModel.find({'recoveryCode': code}).lean();
+
         if (!recoveryPassword[0]) {
             return null
         }
@@ -145,11 +149,21 @@ export class UserRepository {
         }
     }
     static async updatePassword(userId: string, newPassword: string) {
-        const passwordSalt = await bcrypt.genSalt(10)
-        const newPasswordHash = UserService.generateHash(newPassword, passwordSalt)
 
-        const result1 = await userModel.updateOne({userId: userId}, {$set: {'accountData.passwordHash': newPasswordHash}})
-        const result2 = await userModel.updateOne({userId: userId}, {$set: {'accountData.passwordSalt': passwordSalt}})
-        return result1.modifiedCount === 1 && result2.modifiedCount === 1
+        const passwordSalt = await bcrypt.genSalt(10)
+        const newPasswordHash = await UserService.generateHash(newPassword, passwordSalt)
+
+        const recoveryPassword = await recoveryPasswordModel.find({userId: userId}).lean()
+        if (!recoveryPassword[0]) {
+            return false
+        }
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        const result1 = await userModel.updateOne({_id: userObjectId}, {$set: {'accountData.passwordHash': newPasswordHash,
+                                                                                'accountData.passwordSalt': passwordSalt}})
+
+        await recoveryPasswordModel.deleteOne({userId: userId})
+
+        return result1.modifiedCount === 1
     }
 }

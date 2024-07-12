@@ -22,6 +22,8 @@ import {commentValidation} from "../../validators/comment-validator";
 export const postRoute = Router({})
 
 postRoute.get('/', async (req: RequestWithQuery<QueryPostInputModel>, res: Response) => {
+    console.log('get on /posts')
+
     const sortData = {
         pageSize: req.query.pageSize,
         pageNumber:  req.query.pageNumber,
@@ -34,6 +36,8 @@ postRoute.get('/', async (req: RequestWithQuery<QueryPostInputModel>, res: Respo
     res.status(200).send(posts)
 })
 postRoute.get('/:id', async (req: RequestWithParams<Params>, res: Response) => {
+    console.log('get on /posts/:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
@@ -51,6 +55,8 @@ postRoute.get('/:id', async (req: RequestWithParams<Params>, res: Response) => {
     res.status(200).send(post)
 })
 postRoute.post('/', authMiddleware, postValidation(), async (req: RequestWithBody<CreatePostModel>, res: Response<OutputPostModel>) => {
+    console.log('post on /posts')
+
     const title = req.body.title
     const shortDescription = req.body.shortDescription
     const content = req.body.content
@@ -68,6 +74,8 @@ postRoute.post('/', authMiddleware, postValidation(), async (req: RequestWithBod
     res.status(201).send(createdPost)
 })
 postRoute.put('/:id', authMiddleware, postValidation(), async (req: RequestWithBodyAndParams<Params, any>, res: Response) => {
+    console.log('put on /posts/:id')
+
     const id = req.params.id
 
 
@@ -96,6 +104,8 @@ postRoute.put('/:id', authMiddleware, postValidation(), async (req: RequestWithB
     }
 })
 postRoute.delete('/:id', authMiddleware, async (req: RequestWithParams<string>, res: Response) => {
+    console.log('delete on /posts/:id')
+
     const id = req.params.id
 
     if (!ObjectId.isValid(id)) {
@@ -117,6 +127,8 @@ postRoute.delete('/:id', authMiddleware, async (req: RequestWithParams<string>, 
 
 //comments
 postRoute.get('/:id/comments', async (req: RequestWithParamsAndQuery<Params, QueryCommentInputModel>, res: Response) => {
+    console.log('get on /posts/:id/comments')
+
     const postId = req.params.id
 
     if (!ObjectId.isValid(postId)) {
@@ -148,6 +160,7 @@ postRoute.get('/:id/comments', async (req: RequestWithParamsAndQuery<Params, Que
     res.status(200).send(comments)
 })
 postRoute.post('/:id/comments', loginMiddleWare, commentValidation(), async (req: RequestWithBodyAndParams<Params, CreateCommentModel>, res: Response) => {
+    console.log('post on /posts/:id/comments')
 
     const postId = req.params.id
     const content = req.body.content
