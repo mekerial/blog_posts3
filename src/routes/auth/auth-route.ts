@@ -242,8 +242,8 @@ authRoute.post('/new-password', registrationLimiter, async (req: RequestWithBody
         return
     }
 
-    if (recoveryCode === userRcvryCode!.recoveryCode && userRcvryCode!.expirationDate > new Date()) {
-        const result = await UserRepository.updatePassword(userRcvryCode.userId, newPassword)
+    if (recoveryCode === userRcvryCode!.recoveryCode && userRcvryCode!.expirationDate! > new Date()) {
+        const result = await UserRepository.updatePassword(userRcvryCode!.userId!, newPassword)
 
         if (!result) {
             res.sendStatus(500)

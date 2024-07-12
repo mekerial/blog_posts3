@@ -134,18 +134,22 @@ export class UserRepository {
     }
 
     static async getRecoveryPasswordByVerifyCode(code: string) {
-        const recoveryPassword = await recoveryPasswordModel.findOne({'recoveryCode': code});
-        if (!recoveryPassword) {
+        const recoveryPassword = await recoveryPasswordModel.find({'recoveryCode': code}).lean();
+        if (!recoveryPassword[0]) {
             return null
         }
-        return recoveryPassword.toObject()
+        return {
+            userId: recoveryPassword[0].userId,
+            recoveryCode: recoveryPassword[0].recoveryCode,
+            expirationDate: recoveryPassword[0].expirationDate
+        }
     }
-    static async updatePassword(_id: ObjectId, newPassword: string) {
+    static async updatePassword(userId: string, newPassword: string) {
         const passwordSalt = await bcrypt.genSalt(10)
         const newPasswordHash = UserService.generateHash(newPassword, passwordSalt)
 
-        const result1 = await userModel.updateOne({_id}, {$set: {'accountData.passwordHash': newPasswordHash}})
-        const result2 = await userModel.updateOne({_id}, {$set: {'accountData.passwordSalt': passwordSalt}})
+        const result1 = await userModel.updateOne({userId: userId}, {$set: {'accountData.passwordHash': newPasswordHash}})
+        const result2 = await userModel.updateOne({userId: userId}, {$set: {'accountData.passwordSalt': passwordSalt}})
         return result1.modifiedCount === 1 && result2.modifiedCount === 1
     }
 }

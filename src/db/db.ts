@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema({
 const RecoveryPasswordSchema = new mongoose.Schema({
     userId: String,
     recoveryCode: String,
-    expirationDate: String
+    expirationDate: Date
 })
 
 export const blogModel = mongoose.model('blogs', blogSchema)
