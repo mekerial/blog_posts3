@@ -230,6 +230,8 @@ authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: 
         console.log('not send password recovery letter')
         return
     }
+
+    res.sendStatus(204)
 })
 authRoute.post('/new-password', registrationLimiter, async (req: RequestWithBody<RecoveryPassword>, res: Response) => {
     console.log('post on /new-password')
@@ -254,4 +256,6 @@ authRoute.post('/new-password', registrationLimiter, async (req: RequestWithBody
         res.sendStatus(204)
         return
     }
+
+    res.sendStatus(204)
 })
