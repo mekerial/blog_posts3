@@ -4,5 +4,9 @@ import {inputValidation} from "../middlewares/input-model-validation/input-valid
 export const loginValidation = body('login').isString().isLength({min: 3, max: 10}).withMessage('Incorrect login!')
 export const passwordValidation = body('password').isString().isLength({min: 6, max: 20}).withMessage('Incorrect password!')
 export const emailValidation = body('email').isEmail().withMessage('Incorrect email!')
-export const newPasswordValidation = body('newPassword').isString().isLength({min: 6, max: 20}).withMessage('Incorrect password!')
 export const userValidation = () => [loginValidation, passwordValidation, emailValidation, inputValidation]
+
+
+export const newRecoveryPasswordValidation = body('newPassword').isString().isLength({min: 6, max: 20}).withMessage('Incorrect password!')
+export const newPasswordValidation = () => [newRecoveryPasswordValidation, inputValidation]
+export const emailOnlyValidation = () => [emailValidation, inputValidation]

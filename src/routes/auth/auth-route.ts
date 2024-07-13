@@ -1,11 +1,11 @@
 import {Router, Response} from 'express';
-import {RequestWithBody, RequestWithBodyAndQuery, RequestWithQuery} from "../../common";
+import {RequestWithBody, RequestWithQuery} from "../../common";
 import {LoginInputModel} from "../../models/logins/input";
 import {UserService} from "../../services/user-service";
 import {jwtService} from "../../application/jwt-service";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {
-    emailValidation,
+    emailOnlyValidation,
     newPasswordValidation,
     userValidation
 } from "../../validators/user-validator";
@@ -218,7 +218,7 @@ authRoute.post('/logout', async (req: RequestWithBody<string>, res: Response) =>
     res.sendStatus(204)
 })
 
-authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: RequestWithBody<{ email: string }>, res: Response) => {
+authRoute.post('/password-recovery', emailOnlyValidation(), emailLimiter, async (req: RequestWithBody<{ email: string }>, res: Response) => {
     console.log('post on /password-recovery')
 
     const email = req.body.email
@@ -240,7 +240,7 @@ authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: 
     const result = await emailAdapter.sendEmail(email, emailSubject.passwordRecovery, `
         <h1>Password recovery</h1>
         <p>To recovery password use this link:
-        <a href='https://cf98fe32045374.lhr.life/new-password?recoveryCode=${code}'>password recovery</a>
+        <a href='https://88f325575a9133.lhr.life/new-password?recoveryCode=${code}'>password recovery</a>
         </p>
     `);
 
@@ -252,16 +252,15 @@ authRoute.post('/password-recovery', emailValidation, emailLimiter, async (req: 
 
     res.sendStatus(204)
 })
-authRoute.post('/new-password', registrationLimiter, newPasswordValidation, async (req: RequestWithBodyAndQuery<RecoveryPassword, { recoveryCode: string }>, res: Response) => {
+authRoute.post('/new-password', registrationLimiter, newPasswordValidation(), async (req: RequestWithBody<RecoveryPassword>, res: Response) => {
     console.log('post on /new-password')
 
-    const recoveryCode = req.query.recoveryCode
+    const recoveryCode = req.body.recoveryCode
     const newPassword = req.body.newPassword
 
     const userRcvryCode = await UserRepository.getRecoveryPasswordByVerifyCode(recoveryCode)
     if (!userRcvryCode) {
-        console.log('recovery code not found')
-        res.sendStatus(404)
+        res.status(400).send({ errorsMessages: [{ message: 'incorrect recoveryCode!', field: "recoveryCode" }] })
         return
     }
 
@@ -276,6 +275,9 @@ authRoute.post('/new-password', registrationLimiter, newPasswordValidation, asyn
 
         console.log('was recovery password')
         res.sendStatus(204)
+        return
+    } else {
+        res.status(400).send({ errorsMessages: [{ message: 'incorrect recoveryCode!', field: "recoveryCode" }] })
         return
     }
 

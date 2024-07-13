@@ -150,13 +150,14 @@ export class UserRepository {
     }
     static async updatePassword(userId: string, newPassword: string) {
 
-        const passwordSalt = await bcrypt.genSalt(10)
-        const newPasswordHash = await UserService.generateHash(newPassword, passwordSalt)
-
         const recoveryPassword = await recoveryPasswordModel.find({userId: userId}).lean()
         if (!recoveryPassword[0]) {
             return false
         }
+
+        const passwordSalt = await bcrypt.genSalt(10)
+        const newPasswordHash = await UserService.generateHash(newPassword, passwordSalt)
+
         const userObjectId = new mongoose.Types.ObjectId(userId);
 
         const result1 = await userModel.updateOne({_id: userObjectId}, {$set: {'accountData.passwordHash': newPasswordHash,
