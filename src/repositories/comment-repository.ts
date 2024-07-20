@@ -52,7 +52,7 @@ export class CommentRepository {
         const mPostId = new mongoose.Types.ObjectId(postId)
         const post = await postModel.findOne({_id: mPostId})
         if (!post){
-            return nulls
+            return null
         }
         const comment = {
             content: content,
