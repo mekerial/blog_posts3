@@ -7,6 +7,7 @@ import {OutputCommentModel} from "../models/comments/output";
 import {PostRepository} from "./post-repository";
 
 import {jwtService} from "../application/jwt-service";
+import mongoose from "mongoose";
 
 
 export class CommentRepository {
@@ -48,9 +49,10 @@ export class CommentRepository {
 
     }
     static async createComment(postId: string, content: string, user: OutputUserModel) {
-        const post = await postModel.findOne({_id: new ObjectId(postId)})
+        const mPostId = new mongoose.Types.ObjectId(postId)
+        const post = await postModel.findOne({_id: mPostId})
         if (!post){
-            return null
+            return nulls
         }
         const comment = {
             content: content,
