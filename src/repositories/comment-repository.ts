@@ -1,10 +1,12 @@
-import {commentModel, postModel} from "../db/db";
+import {commentModel, postModel, userModel} from "../db/db";
 import {transformCommentDB} from "../models/comments/mappers/mapper";
 import {CreateCommentModel, QueryCommentInputModel} from "../models/comments/input";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
 import {OutputCommentModel} from "../models/comments/output";
 import {PostRepository} from "./post-repository";
+
+import {jwtService} from "../application/jwt-service";
 
 
 export class CommentRepository {
@@ -90,5 +92,39 @@ export class CommentRepository {
         const comment = await commentModel.deleteOne({_id: new ObjectId(id)})
 
         return !!comment.deletedCount
+    }
+    static async likeComment(commentId: string, likeStatus: string, accessToken: string) {
+        const comment = await this.getCommentById(commentId)
+        if (!comment) {
+            return
+        }
+
+        const userId = await jwtService.getUserIdByAccessToken(accessToken)
+        const user = await userModel.findById(userId)
+
+        if(likeStatus === 'Like'){
+            if(commentId in user!.likedComments){
+                comment.likesInfo.likesCount--
+                user!.likedComments = user!.likedComments.filter(i => i !== commentId)
+                await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
+                return
+            }
+            comment.likesInfo.likesCount++
+            user!.likedComments.push(commentId)
+            await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
+            return
+        }
+        if(likeStatus === 'Dislike'){
+            if(commentId in user!.dislikedComments){
+                comment.likesInfo.dislikesCount--
+                user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
+                await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
+                return
+            }
+            comment.likesInfo.dislikesCount++
+            user!.dislikedComments.push(commentId)
+            await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
+            return
+        }
     }
 }

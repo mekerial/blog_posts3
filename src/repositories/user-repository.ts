@@ -127,8 +127,6 @@ export class UserRepository {
             }])
         }
 
-
-
         await recoveryPasswordModel.updateOne({userId: _id}, {$set: {'recoveryCode': code,
                                                                         'expirationDate': date}})
         console.log('success update recovery password verify code')

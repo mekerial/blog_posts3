@@ -1,5 +1,5 @@
 import {Router, Response} from "express";
-import {Params, RequestWithBody, RequestWithBodyAndParams, RequestWithParams} from "../../common";
+import {Params, RequestWithBodyAndParams, RequestWithParams} from "../../common";
 import {ObjectId} from "mongodb";
 import {CommentRepository} from "../../repositories/comment-repository";
 import {CreateCommentModel} from "../../models/comments/input";
@@ -93,8 +93,23 @@ class CommentController {
             res.sendStatus(404)
         }
     }
-    async likeComment(req: RequestWithBody<{likeStatus: string}>, res: Response) {
+    async likeComment(req: RequestWithBodyAndParams<{id: string}, {likeStatus: string}>, res: Response) {
+        console.log('put request | comments/:id/like-status')
         const likeStatus = req.body.likeStatus
+        const accessToken = req.headers.authorization!.split(' ')[1]
+        const commentId = req.params.id
+
+        if (!ObjectId.isValid(commentId)) {
+            res.sendStatus(404)
+            return
+        }
+        const comment = await CommentRepository.getCommentById(commentId)
+        if (!comment) {
+            res.sendStatus(404)
+            return
+        }
+
+        await CommentRepository.likeComment(commentId, likeStatus, accessToken)
 
         res.sendStatus(204)
     }
