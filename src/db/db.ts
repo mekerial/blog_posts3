@@ -40,19 +40,21 @@ const postSchema = new mongoose.Schema({
     createdAt: String
 })
 const commentSchema = new mongoose.Schema({
-    title: String,
-    shortDescription: String,
     content: String,
-    blogId: String,
-    blogName: String,
-    createdAt: String
+    commentatorInfo: {
+        userId: String,
+        userLogin: String
+    },
+    createdAt: String,
+    likesInfo: {
+        likesCount: Number,
+        dislikesCount: Number
+    }
 })
-
 const refreshTokenSchema = new mongoose.Schema({
     userId: ObjectId,
     refreshToken: String
 })
-
 const sessionSchema = new mongoose.Schema({
         issuedAt: String,
         lastActiveDate: String,
@@ -61,8 +63,7 @@ const sessionSchema = new mongoose.Schema({
         deviceName: String,
         userId: String,
         refreshToken: String
-    }
-)
+    })
 const userSchema = new mongoose.Schema({
     accountData: {
         login: String,
@@ -75,7 +76,9 @@ const userSchema = new mongoose.Schema({
         confirmationCode: String,
         expirationDate: Date,
         isConfirmed: Boolean
-    }
+    },
+    likedComments: [],
+    dislikedComments: []
 })
 const RecoveryPasswordSchema = new mongoose.Schema({
     userId: String,

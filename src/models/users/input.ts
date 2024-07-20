@@ -30,7 +30,9 @@ export type CreateUserWithHash = {
         confirmationCode: string,
         expirationDate: Date,
         isConfirmed: boolean
-    }
+    },
+    likedComments: string[]
+    dislikedComments: string[]
 }
 
 export type QueryUserInputModel = {

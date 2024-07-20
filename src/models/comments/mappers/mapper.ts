@@ -8,7 +8,8 @@ export const commentMapper = (commentDB: WithId<CommentDbType>): OutputCommentMo
         content: commentDB.content,
         commentatorInfo: commentDB.commentatorInfo,
         createdAt: commentDB.createdAt,
-        id: commentDB._id
+        id: commentDB._id,
+        likesInfo: commentDB.likesInfo
     }
 }
 
@@ -16,9 +17,13 @@ export function transformCommentDB(value: FlattenMaps<{
     createdAt?: string | null | undefined;
     content?: string | null | undefined;
     commentatorInfo?: {
-        userId: string,
-        userLogin: string,
-    };
+        userId?: string | null | undefined,
+        userLogin?: string | null | undefined,
+    } | null | undefined,
+    likesInfo?: {
+        likesCount?: number | null | undefined,
+        dislikesCount?: number | null | undefined
+    } | null | undefined;
     }> &
     { _id: ObjectId }): OutputCommentModel {
 
@@ -30,5 +35,9 @@ export function transformCommentDB(value: FlattenMaps<{
         },
         createdAt: value.createdAt || '',
         content: value.content || '',
+        likesInfo: {
+            likesCount: value.likesInfo?.likesCount || 0,
+            dislikesCount: value.likesInfo?.dislikesCount || 0
+        }
     };
 }

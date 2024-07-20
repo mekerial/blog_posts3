@@ -1,4 +1,4 @@
-import {postModel} from "../db/db";
+import {blogModel, postModel} from "../db/db";
 import {transformPostDB} from "../models/posts/mappers/mapper";
 import {ObjectId} from "mongodb";
 import {OutputPostModel} from "../models/posts/output";
@@ -43,19 +43,22 @@ export class PostRepository {
     }
 
     static async createPost(createdData: CreatePostModel): Promise<OutputPostModel | undefined> {
-        const blogId = new mongoose.Types.ObjectId(createdData.blogId);
+        const blogId = new mongoose.Types.ObjectId(createdData.blogId)
 
-        const findBlog = await postModel.find({_id: blogId}).lean();
-        if (!findBlog[0]) {
+
+
+        const findBlog = await blogModel.findById(blogId)
+        if (!findBlog) {
             return undefined
         }
-        const blog = findBlog[0]
+        const blog = findBlog
 
         const post = {
             ...createdData,
-            blogName: blog!.blogName,
+            blogName: blog!.name,
             createdAt: new Date().toISOString()
         }
+
 
         const newPost = await postModel.insertMany([{...post}])
 

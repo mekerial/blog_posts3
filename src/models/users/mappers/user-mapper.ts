@@ -24,7 +24,7 @@ export function transformUserDB(value: FlattenMaps<{
         confirmationCode?: string | null | undefined,
         expirationDate?: Date | null | undefined,
         isConfirmed?: boolean | null | undefined;
-    } | null | undefined
+    } | null | undefined,
 }> & { _id: ObjectId }): OutputUserModel {
 
     const accountData = value.accountData || {};
@@ -49,8 +49,10 @@ export function mapperUserDB(value: FlattenMaps<{
         confirmationCode?: string | null | undefined,
         expirationDate?: Date | null | undefined,
         isConfirmed?: boolean | null | undefined;
-    } | null | undefined
-}> & { _id: ObjectId }): WithId<UserDbType> {
+    } | null | undefined,
+    likedComments: string[] ,
+    dislikedComments: string[],
+}> & { _id: ObjectId }) {
 
     const accountData = value.accountData || {};
     return {
@@ -67,5 +69,7 @@ export function mapperUserDB(value: FlattenMaps<{
             expirationDate: value.emailConfirmation?.expirationDate!,
             isConfirmed: value.emailConfirmation?.isConfirmed || false
         } || null || undefined,
+        likedComments: value.likedComments,
+        dislikedComments: value.dislikedComments,
     };
 }

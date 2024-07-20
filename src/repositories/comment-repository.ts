@@ -41,7 +41,7 @@ export class CommentRepository {
             page: +pageNumber,
             pageSize: pageSize,
             totalCount,
-            items: comments.map(transformCommentDB)
+            items: comments
         }
 
     }
@@ -69,13 +69,13 @@ export class CommentRepository {
         }
     }
     static async getCommentById(id: string): Promise<OutputCommentModel | null> {
-        const comment = await commentModel.findOne({_id: new ObjectId(id)})
+        const comment = await commentModel.find({_id: new ObjectId(id)}).lean()
 
-        if (!comment) {
+        if (!comment[0]) {
             return null
         }
 
-        return transformCommentDB(comment)
+        return transformCommentDB(comment[0])
     }
     static async updateComment(id: string, updateData: CreateCommentModel) {
         const comment = await commentModel.updateOne({_id: new ObjectId(id)}, {

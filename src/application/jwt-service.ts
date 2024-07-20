@@ -7,7 +7,7 @@ dotenv.config()
 
 export const jwtService = {
     async createJWT(userId: ObjectId) {
-        const accessToken = jwt.sign({userId: userId}, process.env.JWT_SECRET!, {expiresIn: '10000'})
+        const accessToken = jwt.sign({userId: userId}, process.env.JWT_SECRET!, {expiresIn: '300000'})
         return accessToken
     },
 
@@ -23,7 +23,7 @@ export const jwtService = {
     async createRefreshToken(userId: ObjectId, deviceId: string) {
         const refreshTokenWithId = {
             userId: userId,
-            refreshToken: jwt.sign({userId: userId, deviceId: deviceId}, process.env.REFRESH_SECRET!, {expiresIn: '20000'})
+            refreshToken: jwt.sign({userId: userId, deviceId: deviceId}, process.env.REFRESH_SECRET!, {expiresIn: '600000'})
         }
 
         await refreshTokenModel.insertMany([refreshTokenWithId])

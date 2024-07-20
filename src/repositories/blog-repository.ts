@@ -29,14 +29,13 @@ export class BlogRepository {
                 }
             }
         }
-
+        console.log(blogModel)
         const blogs = await blogModel
             .find(filter)
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
             .lean()
-
 
         const totalCount = await blogModel.countDocuments(filter)
 
@@ -97,7 +96,7 @@ export class BlogRepository {
         const blogId = new mongoose.Types.ObjectId(id);
 
         const blog = await blogModel.find({ _id: blogId }).lean();
-        console.log(blog[0])
+
         if (!blog[0]) {
             return null;
         }

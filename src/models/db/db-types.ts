@@ -36,7 +36,9 @@ export type UserDbType = {
         confirmationCode: string,
         expirationDate: Date,
         isConfirmed: boolean
-    }
+    },
+    likedComments: string[],
+    dislikedComments: string[],
 }
 
 export type CommentDbType = {
@@ -44,6 +46,10 @@ export type CommentDbType = {
     commentatorInfo: commentatorInfo,
     createdAt: string,
     postId: string
+    likesInfo: {
+        likesCount: number,
+        dislikesCount: number
+    }
 }
 
 export type commentatorInfo = {

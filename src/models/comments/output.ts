@@ -6,4 +6,8 @@ export type OutputCommentModel = {
     content: string,
     commentatorInfo: commentatorInfo,
     createdAt: string
+    likesInfo: {
+        likesCount: number,
+        dislikesCount: number
+    }
 }
