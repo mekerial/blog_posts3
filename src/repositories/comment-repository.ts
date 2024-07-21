@@ -60,7 +60,11 @@ export class CommentRepository {
                 userId: user.id,
                 userLogin: user.login
             },
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            likesInfo: {
+                likesCount: 0,
+                dislikesCount: 0
+            }
         }
         const newComment = await commentModel.insertMany([{...comment, postId: postId}])
 
