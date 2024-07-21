@@ -172,6 +172,14 @@ class PostController {
         const user = req.user
 
         const newComment = await CommentRepository.createComment(postId, content, user!)
+        const commentWithStatus = {
+            ...newComment,
+            likesInfo: {
+                likedCount: newComment?.likesInfo.likesCount,
+                dislikedCount: newComment?.likesInfo.dislikesCount,
+                myStatus: "None"
+            }
+        }
 
         if (!newComment) {
             res.sendStatus(404)

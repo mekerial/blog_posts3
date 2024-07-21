@@ -5,26 +5,73 @@ import {CommentRepository} from "../../repositories/comment-repository";
 import {CreateCommentModel} from "../../models/comments/input";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {commentValidation} from "../../validators/comment-validator";
+import {jwtService} from "../../application/jwt-service";
+import {userModel} from "../../db/db";
+import {UserRepository} from "../../repositories/user-repository";
 
 class CommentController {
     async getCommentById(req: RequestWithParams<Params>, res: Response) {
         console.log('get request | comments/:id')
 
         const id = req.params.id
+        const accessToken = req.headers.authorization?.split(' ')[1]
+        let user
+        if(accessToken) {
+            const userId = await jwtService.getUserIdByAccessToken(accessToken)
+            if(!userId) {
+                res.sendStatus(401)
+                console.log('not found user by token')
+                return
+            }
+            req.user = await UserRepository.getUserById(userId)
+            if(!req.user) {
+                console.log('user is null')
+                res.sendStatus(404)
+                return
+            }
+            user = await userModel.findById(userId)
+        }
 
         if (!ObjectId.isValid(id)) {
             res.sendStatus(404)
             return
         }
-
         const comment = await CommentRepository.getCommentById(id)
+        if (!comment) {
+            res.sendStatus(404)
+            return
+        }
+
+        let myStatus = "None"
+        if(user){
+            const likedComments = user.likedComments
+            const dislikedComments = user.dislikedComments
+
+            if(comment.id.toString() in likedComments) {
+                myStatus = "Like"
+            }
+            if(comment.id.toString() in dislikedComments) {
+                myStatus = "Dislike"
+            }
+        } else {
+            myStatus = "None"
+        }
+
+        const commentWithStatus = {
+            ...comment,
+            likesInfo: {
+                likedCount: comment?.likesInfo.likesCount,
+                dislikedCount: comment?.likesInfo.dislikesCount,
+                myStatus: myStatus
+            }
+        }
 
         if (!comment) {
             res.sendStatus(404)
             return
         }
 
-        res.send(comment)
+        res.send(commentWithStatus)
     }
     async editCommentById(req: RequestWithBodyAndParams<Params, CreateCommentModel>, res: Response) {
         console.log('put request | comments/:id')
@@ -103,7 +150,9 @@ class CommentController {
             res.sendStatus(404)
             return
         }
+
         const comment = await CommentRepository.getCommentById(commentId)
+
         if (!comment) {
             res.sendStatus(404)
             return

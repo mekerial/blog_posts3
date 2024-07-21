@@ -77,8 +77,8 @@ const userSchema = new mongoose.Schema({
         expirationDate: Date,
         isConfirmed: Boolean
     },
-    likedComments: [],
-    dislikedComments: []
+    likedComments: [String],
+    dislikedComments: [String]
 })
 const RecoveryPasswordSchema = new mongoose.Schema({
     userId: String,
