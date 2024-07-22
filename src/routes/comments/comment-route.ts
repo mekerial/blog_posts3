@@ -34,6 +34,7 @@ class CommentController {
                 return
             }
             user = await userModel.findById(mUserId)
+            console.log(user)
         }
 
         if (!ObjectId.isValid(id)) {
