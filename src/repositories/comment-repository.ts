@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 
 
 export class CommentRepository {
-    static async getCommentsByPostId(postId: string, sortData: QueryCommentInputModel, accessToken: string) {
+    static async getCommentsByPostId(postId: string, sortData: QueryCommentInputModel, accessToken: string | undefined) {
 
         const post = await PostRepository.getPostById(postId)
 
@@ -39,7 +39,7 @@ export class CommentRepository {
 
         const pagesCount = Math.ceil(totalCount / pageSize)
         let commentsWithStatus = comments.map(transformCommentDB)
-        const commentsWithMyStatus = transformCommentDbWithMyStatus(commentsWithStatus, accessToken)
+        const commentsWithMyStatus = await transformCommentDbWithMyStatus(commentsWithStatus, accessToken)
 
         return {
             pagesCount,
@@ -76,7 +76,6 @@ export class CommentRepository {
         return {
             ...comment,
             id: insertedId,
-
         }
     }
     static async getCommentById(id: string): Promise<OutputCommentModel | null> {

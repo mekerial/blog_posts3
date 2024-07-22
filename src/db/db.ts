@@ -49,7 +49,8 @@ const commentSchema = new mongoose.Schema({
     likesInfo: {
         likesCount: Number,
         dislikesCount: Number
-    }
+    },
+    postId: String
 })
 const refreshTokenSchema = new mongoose.Schema({
     userId: ObjectId,

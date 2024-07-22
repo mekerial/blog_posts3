@@ -60,28 +60,54 @@ export async function transformCommentDbWithMyStatus(value: {
         likesCount: number,
         dislikesCount: number
     };
-}[], accessToken: string) {
+}[], accessToken: string | undefined) {
+
+    if(accessToken) {
+        const userId = await jwtService.getUserIdByAccessToken(accessToken)
+        const user = await userModel.findById(userId)
+        const commentsWithStatus = []
+        for(let i = 0; i < value.length; i++){
+            let myStatus = "None"
+
+            if(!user) {
+                myStatus = "None"
+            } else {
+
+            }
+
+            if(user!.likedComments.includes(value[i].id.toString())) {
+                myStatus = "Like"
+            }
+            if(user!.dislikedComments.includes(value[i].id.toString())) {
+                myStatus = "Dislike"
+            }
+
+            commentsWithStatus.push({
+                id: value[i].id,
+                commentatorInfo: {
+                    userId: value[i].commentatorInfo?.userId || '',
+                    userLogin: value[i].commentatorInfo?.userLogin || '',
+                },
+                createdAt: value[i].createdAt || '',
+                content: value[i].content || '',
+                likesInfo: {
+                    likesCount: value[i].likesInfo?.likesCount || 0,
+                    dislikesCount: value[i].likesInfo?.dislikesCount || 0,
+                    myStatus: myStatus
+                }
+            })
+        }
+        return commentsWithStatus
+    }
+
+    console.log(accessToken)
 
 
-
-    const userId = await jwtService.getUserIdByAccessToken(accessToken)
-    const user = await userModel.findById(userId)
-
-
-
-    const commentsWithStatus = []
+    const commentsWithStatusNone = []
     for(let i = 0; i < value.length; i++){
-        let myStatus = "None"
-        if(user!.likedComments.includes(value[i].id.toString())) {
-            myStatus = "Like"
-        }
-        if(user!.dislikedComments.includes(value[i].id.toString())) {
-            myStatus = "Dislike"
-        }
+        const myStatus = "None"
 
-
-
-        commentsWithStatus.push({
+        commentsWithStatusNone.push({
             id: value[i].id,
             commentatorInfo: {
                 userId: value[i].commentatorInfo?.userId || '',
@@ -96,5 +122,5 @@ export async function transformCommentDbWithMyStatus(value: {
             }
         })
     }
-    return commentsWithStatus
+    return commentsWithStatusNone
 }

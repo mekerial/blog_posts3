@@ -162,20 +162,17 @@ class PostController {
         if(accessToken) {
             const userId = await jwtService.getUserIdByAccessToken(accessToken)
             if (!userId) {
-                res.sendStatus(401)
                 console.log('not found user by token')
-                return
+            } else {
+                req.user = await UserRepository.getUserById(userId)
+                if (!req.user) {
+                    console.log('user is null')
+                }
             }
-            req.user = await UserRepository.getUserById(userId)
-            if (!req.user) {
-                console.log('user is null')
-                res.sendStatus(404)
-                return
-            }
+
         }
 
-
-        const comments = await CommentRepository.getCommentsByPostId(postId, sortData, accessToken!)
+        const comments = await CommentRepository.getCommentsByPostId(postId, sortData, accessToken)
 
         if (!comments) {
             res.sendStatus(404)
