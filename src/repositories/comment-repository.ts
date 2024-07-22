@@ -121,24 +121,26 @@ export class CommentRepository {
 
         if(likeStatus === 'Like'){
             if(user!.likedComments.includes(commentId)){
-                comment.likesInfo.likesCount--
-                user!.likedComments = user!.likedComments.filter(i => i !== commentId)
+                //comment.likesInfo.likesCount--
+                //user!.likedComments = user!.likedComments.filter(i => i !== commentId)
+                //await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
+                //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
+                return
+            } else {
+                comment.likesInfo.likesCount++
+                user!.likedComments.push(commentId)
                 await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
                 await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
                 return
             }
-            comment.likesInfo.likesCount++
-            user!.likedComments.push(commentId)
-            await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
-            await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
-            return
+
         }
         if(likeStatus === 'Dislike'){
             if(user!.dislikedComments.includes(commentId)){
-                comment.likesInfo.dislikesCount--
-                user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
-                await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
-                await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
+                //comment.likesInfo.dislikesCount--
+                //user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
+                //await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
+                //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
                 return
             }
             comment.likesInfo.dislikesCount++
