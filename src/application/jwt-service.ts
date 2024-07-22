@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import {ObjectId} from "mongodb";
 import {refreshTokenModel} from "../db/db";
 import {SessionsRepository} from "../repositories/security-devices-repository";
+import mongoose from "mongoose";
 dotenv.config()
 
 export const jwtService = {
@@ -14,7 +15,7 @@ export const jwtService = {
     async getUserIdByAccessToken(accessToken: string) {
         try {
             const result: any = jwt.verify(accessToken, process.env.JWT_SECRET!)
-            return new ObjectId(result.userId)
+            return new mongoose.Types.ObjectId(result.userId)
         } catch {
             return null
         }
@@ -37,7 +38,7 @@ export const jwtService = {
             const getRefreshToken = await refreshTokenModel.find({refreshToken: refreshToken}).lean()
 
             if (getRefreshToken[0]) {
-                return new ObjectId(result.userId)
+                return new mongoose.Types.ObjectId(result.userId)
             } else {
                 return null
             }

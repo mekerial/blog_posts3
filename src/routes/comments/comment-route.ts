@@ -8,6 +8,7 @@ import {commentValidation} from "../../validators/comment-validator";
 import {jwtService} from "../../application/jwt-service";
 import {userModel} from "../../db/db";
 import {UserRepository} from "../../repositories/user-repository";
+import mongoose from "mongoose";
 
 class CommentController {
     async getCommentById(req: RequestWithParams<Params>, res: Response) {
@@ -18,18 +19,21 @@ class CommentController {
         let user
         if(accessToken) {
             const userId = await jwtService.getUserIdByAccessToken(accessToken)
+
             if(!userId) {
                 res.sendStatus(401)
                 console.log('not found user by token')
                 return
             }
+            const mUserId = new mongoose.Types.ObjectId(userId)
+
             req.user = await UserRepository.getUserById(userId)
             if(!req.user) {
                 console.log('user is null')
                 res.sendStatus(404)
                 return
             }
-            user = await userModel.findById(userId)
+            user = await userModel.findById(mUserId)
         }
 
         if (!ObjectId.isValid(id)) {
@@ -47,10 +51,10 @@ class CommentController {
             const likedComments = user.likedComments
             const dislikedComments = user.dislikedComments
 
-            if(comment.id.toString() in likedComments) {
+            if(likedComments.includes(comment.id.toString())) {
                 myStatus = "Like"
             }
-            if(comment.id.toString() in dislikedComments) {
+            if(dislikedComments.includes(comment.id.toString())) {
                 myStatus = "Dislike"
             }
         } else {
