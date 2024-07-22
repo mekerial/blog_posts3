@@ -17,6 +17,8 @@ import {CreateCommentModel, QueryCommentInputModel} from "../../models/comments/
 import {CommentRepository} from "../../repositories/comment-repository";
 import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {commentValidation} from "../../validators/comment-validator";
+import {jwtService} from "../../application/jwt-service";
+import {UserRepository} from "../../repositories/user-repository";
 
 class PostController {
     async getAllPosts(req: RequestWithQuery<QueryPostInputModel>, res: Response) {
@@ -155,7 +157,25 @@ class PostController {
             sortDirection: req.query.sortDirection,
         }
 
-        const comments = await CommentRepository.getCommentsByPostId(postId, sortData)
+
+        const accessToken = req.headers.authorization?.split(' ')[1]
+        if(accessToken) {
+            const userId = await jwtService.getUserIdByAccessToken(accessToken)
+            if (!userId) {
+                res.sendStatus(401)
+                console.log('not found user by token')
+                return
+            }
+            req.user = await UserRepository.getUserById(userId)
+            if (!req.user) {
+                console.log('user is null')
+                res.sendStatus(404)
+                return
+            }
+        }
+
+
+        const comments = await CommentRepository.getCommentsByPostId(postId, sortData, accessToken!)
 
         if (!comments) {
             res.sendStatus(404)

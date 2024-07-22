@@ -1,5 +1,5 @@
 import {commentModel, postModel, userModel} from "../db/db";
-import {transformCommentDB} from "../models/comments/mappers/mapper";
+import {transformCommentDB, transformCommentDbWithMyStatus} from "../models/comments/mappers/mapper";
 import {CreateCommentModel, QueryCommentInputModel} from "../models/comments/input";
 import {ObjectId} from "mongodb";
 import {OutputUserModel} from "../models/users/output";
@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 
 
 export class CommentRepository {
-    static async getCommentsByPostId(postId: string, sortData: QueryCommentInputModel) {
+    static async getCommentsByPostId(postId: string, sortData: QueryCommentInputModel, accessToken: string) {
 
         const post = await PostRepository.getPostById(postId)
 
@@ -38,13 +38,15 @@ export class CommentRepository {
         const totalCount = allComments.length
 
         const pagesCount = Math.ceil(totalCount / pageSize)
+        let commentsWithStatus = comments.map(transformCommentDB)
+        const commentsWithMyStatus = transformCommentDbWithMyStatus(commentsWithStatus, accessToken)
 
         return {
             pagesCount,
             page: +pageNumber,
             pageSize: pageSize,
             totalCount,
-            items: comments
+            items: commentsWithMyStatus
         }
 
     }
