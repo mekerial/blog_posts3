@@ -64,8 +64,8 @@ class CommentController {
         const commentWithStatus = {
             ...comment,
             likesInfo: {
-                likedCount: comment?.likesInfo.likesCount,
-                dislikedCount: comment?.likesInfo.dislikesCount,
+                likesCount: comment?.likesInfo.likesCount,
+                dislikesCount: comment?.likesInfo.dislikesCount,
                 myStatus: myStatus
             }
         }
