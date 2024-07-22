@@ -27,7 +27,7 @@ export class CommentRepository {
 
         const comments = await commentModel
             .find({postId: postId})
-            .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1 })
+            .sort({[sortBy]: sortDirection === 'desc' ? -1 : 1})
             .skip((+pageNumber - 1) * pageSize)
             .limit(+pageSize)
             .lean()
@@ -50,10 +50,11 @@ export class CommentRepository {
         }
 
     }
+
     static async createComment(postId: string, content: string, user: OutputUserModel) {
         const mPostId = new mongoose.Types.ObjectId(postId)
         const post = await postModel.findOne({_id: mPostId})
-        if (!post){
+        if (!post) {
             return null
         }
         const comment = {
@@ -78,6 +79,7 @@ export class CommentRepository {
             id: insertedId,
         }
     }
+
     static async getCommentById(id: string): Promise<OutputCommentModel | null> {
         const commentId = new mongoose.Types.ObjectId(id)
         const comment = await commentModel.find({_id: commentId}).lean()
@@ -88,6 +90,7 @@ export class CommentRepository {
 
         return transformCommentDB(comment[0])
     }
+
     static async updateComment(id: string, updateData: CreateCommentModel) {
         const comment = await commentModel.updateOne({_id: new ObjectId(id)}, {
             $set: {
@@ -97,11 +100,13 @@ export class CommentRepository {
 
         return !!comment.matchedCount
     }
+
     static async deleteComment(id: string): Promise<boolean> {
         const comment = await commentModel.deleteOne({_id: new ObjectId(id)})
 
         return !!comment.deletedCount
     }
+
     static async likeComment(commentId: string, likeStatus: string, accessToken: string) {
 
         const comment = await this.getCommentById(commentId)
@@ -111,7 +116,7 @@ export class CommentRepository {
         }
 
         const userId = await jwtService.getUserIdByAccessToken(accessToken)
-        if(!userId) {
+        if (!userId) {
             console.log('not found user by token')
             return
         }
@@ -119,15 +124,15 @@ export class CommentRepository {
 
         const user = await userModel.findById(mUserId)
 
-        if(likeStatus === 'Like'){
-            if(user!.likedComments.includes(commentId)){
+        if (likeStatus === 'Like') {
+            if (user!.likedComments.includes(commentId)) {
                 //comment.likesInfo.likesCount--
                 //user!.likedComments = user!.likedComments.filter(i => i !== commentId)
                 //await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
                 //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
                 return
             } else {
-                if(user!.dislikedComments.includes(commentId)) {
+                if (user!.dislikedComments.includes(commentId)) {
                     comment.likesInfo.dislikesCount--
                     user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
                     await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
@@ -141,15 +146,15 @@ export class CommentRepository {
             }
 
         }
-        if(likeStatus === 'Dislike'){
-            if(user!.dislikedComments.includes(commentId)){
+        if (likeStatus === 'Dislike') {
+            if (user!.dislikedComments.includes(commentId)) {
                 //comment.likesInfo.dislikesCount--
                 //user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
                 //await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
                 //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
                 return
             }
-            if(user!.likedComments.includes(commentId)) {
+            if (user!.likedComments.includes(commentId)) {
                 comment.likesInfo.likesCount--
                 user!.likedComments = user!.likedComments.filter(i => i !== commentId)
                 await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
@@ -160,6 +165,25 @@ export class CommentRepository {
             await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
             await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
             return
+        }
+
+        if (likeStatus === 'None') {
+
+            if (user!.dislikedComments.includes(commentId)) {
+                comment.likesInfo.dislikesCount--
+                user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
+                await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
+                await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
+            }
+            if (user!.likedComments.includes(commentId)) {
+                comment.likesInfo.likesCount--
+                user!.likedComments = user!.likedComments.filter(i => i !== commentId)
+                await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
+                await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
+                return
+
+            }
+
         }
     }
 }
