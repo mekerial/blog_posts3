@@ -151,17 +151,23 @@ class CommentController {
             res.sendStatus(404)
             return
         }
+        console.log('1')
 
         const comment = await CommentRepository.getCommentById(commentId)
+        console.log('1')
 
         if (!comment) {
             res.sendStatus(404)
             return
         }
-
-        await CommentRepository.likeComment(commentId, likeStatus, accessToken)
+        const statusComment = await CommentRepository.likeComment(commentId, likeStatus, accessToken)
+        if(!statusComment) {
+            res.sendStatus(400)
+            return
+        }
 
         res.sendStatus(204)
+        return
     }
 }
 
@@ -171,4 +177,4 @@ export const commentRoute = Router({})
 commentRoute.get('/:id', commentController.getCommentById)
 commentRoute.put('/:id', loginMiddleWare, commentValidation(), commentController.editCommentById)
 commentRoute.delete('/:id', loginMiddleWare, commentController.deleteCommentById)
-commentRoute.put('/:id/like-status', loginMiddleWare, likeStatusValidation, commentController.likeComment)
+commentRoute.put('/:id/like-status', loginMiddleWare, likeStatusValidation(), commentController.likeComment)
