@@ -127,6 +127,12 @@ export class CommentRepository {
                 //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
                 return
             } else {
+                if(user!.dislikedComments.includes(commentId)) {
+                    comment.likesInfo.dislikesCount--
+                    user!.dislikedComments = user!.dislikedComments.filter(i => i !== commentId)
+                    await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
+                    await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
+                }
                 comment.likesInfo.likesCount++
                 user!.likedComments.push(commentId)
                 await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
@@ -142,6 +148,12 @@ export class CommentRepository {
                 //await userModel.updateOne({_id: userId}, {$set: {'dislikedComments': user!.dislikedComments}})
                 //await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.dislikesCount': comment.likesInfo.dislikesCount}})
                 return
+            }
+            if(user!.likedComments.includes(commentId)) {
+                comment.likesInfo.likesCount--
+                user!.likedComments = user!.likedComments.filter(i => i !== commentId)
+                await userModel.updateOne({_id: userId}, {$set: {'likedComments': user!.likedComments}})
+                await commentModel.updateOne({_id: commentId}, {$set: {'likesInfo.likesCount': comment.likesInfo.likesCount}})
             }
             comment.likesInfo.dislikesCount++
             user!.dislikedComments.push(commentId)

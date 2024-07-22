@@ -9,6 +9,7 @@ import {jwtService} from "../../application/jwt-service";
 import {userModel} from "../../db/db";
 import {UserRepository} from "../../repositories/user-repository";
 import mongoose from "mongoose";
+import {likeStatusValidation} from "../../validators/likeStatus-validator";
 
 class CommentController {
     async getCommentById(req: RequestWithParams<Params>, res: Response) {
@@ -175,4 +176,4 @@ export const commentRoute = Router({})
 commentRoute.get('/:id', commentController.getCommentById)
 commentRoute.put('/:id', loginMiddleWare, commentValidation(), commentController.editCommentById)
 commentRoute.delete('/:id', loginMiddleWare, commentController.deleteCommentById)
-commentRoute.put('/:id/like-status', loginMiddleWare, commentController.likeComment)
+commentRoute.put('/:id/like-status', loginMiddleWare, likeStatusValidation, commentController.likeComment)
