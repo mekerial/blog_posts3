@@ -202,7 +202,7 @@ class PostController {
             res.sendStatus(404)
             return
         }
-        res.status(201).send(newComment)
+        res.status(201).send(commentWithStatus)
     }
 }
 
