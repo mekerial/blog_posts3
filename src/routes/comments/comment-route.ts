@@ -22,20 +22,15 @@ class CommentController {
             const userId = await jwtService.getUserIdByAccessToken(accessToken)
 
             if(!userId) {
-                res.sendStatus(401)
                 console.log('not found user by token')
-                return
+            } else {
+                const mUserId = new mongoose.Types.ObjectId(userId)
+                req.user = await UserRepository.getUserById(userId)
+                if(!req.user) {
+                    console.log('user is null')
+                }
+                user = await userModel.findById(mUserId)
             }
-            const mUserId = new mongoose.Types.ObjectId(userId)
-
-            req.user = await UserRepository.getUserById(userId)
-            if(!req.user) {
-                console.log('user is null')
-                res.sendStatus(404)
-                return
-            }
-            user = await userModel.findById(mUserId)
-            console.log(user)
         }
 
         if (!ObjectId.isValid(id)) {
