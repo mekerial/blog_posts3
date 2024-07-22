@@ -183,7 +183,7 @@ export class CommentRepository {
                 return
 
             }
-
+            return
         }
     }
 }
