@@ -192,8 +192,8 @@ class PostController {
         const commentWithStatus = {
             ...newComment,
             likesInfo: {
-                likedCount: newComment?.likesInfo.likesCount,
-                dislikedCount: newComment?.likesInfo.dislikesCount,
+                likesCount: newComment?.likesInfo.likesCount,
+                dislikesCount: newComment?.likesInfo.dislikesCount,
                 myStatus: "None"
             }
         }
