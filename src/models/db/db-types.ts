@@ -21,7 +21,16 @@ export type PostDBType = {
     content: string,
     blogId: string,
     blogName: string,
-    createdAt: string
+    createdAt: string,
+    extendedLikesInfo: {
+        likesCount: number,
+        dislikesCount: number,
+        newestLikes: [{
+            addedAt: string,
+            userId: string,
+            login: string
+        }]
+    }
 }
 
 export type UserDbType = {
@@ -39,6 +48,8 @@ export type UserDbType = {
     },
     likedComments: string[],
     dislikedComments: string[],
+    likedPosts: string[],
+    dislikedPosts: string[]
 }
 
 export type CommentDbType = {

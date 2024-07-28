@@ -50,8 +50,10 @@ export function mapperUserDB(value: FlattenMaps<{
         expirationDate?: Date | null | undefined,
         isConfirmed?: boolean | null | undefined;
     } | null | undefined,
-    likedComments: string[] ,
+    likedComments: string[],
     dislikedComments: string[],
+    likedPosts: string[],
+    dislikedPosts: string[]
 }> & { _id: ObjectId }) {
 
     const accountData = value.accountData || {};
@@ -71,5 +73,7 @@ export function mapperUserDB(value: FlattenMaps<{
         } || null || undefined,
         likedComments: value.likedComments,
         dislikedComments: value.dislikedComments,
+        likedPosts: value.likedPosts,
+        dislikedPosts: value.dislikedPosts
     };
 }

@@ -31,13 +31,24 @@ const blogSchema = new mongoose.Schema({
     createdAt: String,
     isMembership: Boolean
 })
+
+
 const postSchema = new mongoose.Schema({
     title: String,
     shortDescription: String,
     content: String,
     blogId: String,
     blogName: String,
-    createdAt: String
+    createdAt: String,
+    extendedLikesInfo: {
+        likesCount: Number,
+        dislikesCount: Number,
+        newestLikes: [{
+            addedAt: String,
+            userId: String,
+            login: String
+        }]
+    }
 })
 const commentSchema = new mongoose.Schema({
     content: String,
@@ -79,7 +90,9 @@ const userSchema = new mongoose.Schema({
         isConfirmed: Boolean
     },
     likedComments: [String],
-    dislikedComments: [String]
+    dislikedComments: [String],
+    likedPosts: [String],
+    dislikedPosts: [String]
 })
 const RecoveryPasswordSchema = new mongoose.Schema({
     userId: String,

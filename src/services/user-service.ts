@@ -32,6 +32,8 @@ export class UserService {
             },
             likedComments: [],
             dislikedComments: [],
+            likedPosts: [],
+            dislikedPosts: []
         }
 
         return UserRepository.createUser(newUser)
@@ -54,7 +56,9 @@ export class UserService {
                 isConfirmed: false
             },
             likedComments: [],
-            dislikedComments: []
+            dislikedComments: [],
+            likedPosts: [],
+            dislikedPosts: [],
         }
 
         return UserRepository.createUser(newUser)

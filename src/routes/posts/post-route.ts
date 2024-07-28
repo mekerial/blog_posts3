@@ -11,7 +11,6 @@ import {
 import {authMiddleware} from "../../middlewares/auth/auth-middleware";
 import {postValidation} from "../../validators/post-validator";
 import {CreatePostModel, QueryPostInputModel} from "../../models/posts/input";
-import {OutputPostModel} from "../../models/posts/output";
 import {ObjectId} from "mongodb";
 import {CreateCommentModel, QueryCommentInputModel} from "../../models/comments/input";
 import {CommentRepository} from "../../repositories/comment-repository";
@@ -19,10 +18,30 @@ import {loginMiddleWare} from "../../middlewares/auth/login-middleware";
 import {commentValidation} from "../../validators/comment-validator";
 import {jwtService} from "../../application/jwt-service";
 import {UserRepository} from "../../repositories/user-repository";
+import mongoose from "mongoose";
+import {userModel} from "../../db/db";
+import {likeStatusValidation} from "../../validators/likeStatus-validator";
 
 class PostController {
     async getAllPosts(req: RequestWithQuery<QueryPostInputModel>, res: Response) {
         console.log('get on /posts')
+
+        const accessToken = req.headers.authorization?.split(' ')[1]
+        let user
+        if(accessToken) {
+            const userId = await jwtService.getUserIdByAccessToken(accessToken)
+
+            if(!userId) {
+                console.log('not found user by token')
+            } else {
+                const mUserId = new mongoose.Types.ObjectId(userId)
+                req.user = await UserRepository.getUserById(userId)
+                if(!req.user) {
+                    console.log('user is null')
+                }
+                user = await userModel.findById(mUserId)
+            }
+        }
 
         const sortData = {
             pageSize: req.query.pageSize,
@@ -32,7 +51,7 @@ class PostController {
         }
 
 
-        const posts = await PostRepository.getAllPosts(sortData)
+        const posts = await PostRepository.getAllPosts(sortData, accessToken)
         res.status(200).send(posts)
     }
 
@@ -40,6 +59,22 @@ class PostController {
         console.log('get on /posts/:id')
 
         const id = req.params.id
+        const accessToken = req.headers.authorization?.split(' ')[1]
+        let user
+        if(accessToken) {
+            const userId = await jwtService.getUserIdByAccessToken(accessToken)
+
+            if(!userId) {
+                console.log('not found user by token')
+            } else {
+                const mUserId = new mongoose.Types.ObjectId(userId)
+                req.user = await UserRepository.getUserById(userId)
+                if(!req.user) {
+                    console.log('user is null')
+                }
+                user = await userModel.findById(mUserId)
+            }
+        }
 
         if (!ObjectId.isValid(id)) {
             res.sendStatus(404)
@@ -47,16 +82,55 @@ class PostController {
         }
 
         const post = await PostRepository.getPostById(id)
-
         if (!post) {
             res.sendStatus(404)
             return;
         }
 
-        res.status(200).send(post)
+        const postWithMyStatus = {
+            ...post,
+            extendedLikesInfo: {
+                likesCount: post.extendedLikesInfo.likesCount,
+                dislikesCount: post.extendedLikesInfo.dislikesCount,
+                myStatus: "None",
+                newestLikes: post.extendedLikesInfo.newestLikes.slice(0,3)
+            }
+        }
+
+        let myStatus = "None"
+        if(user){
+            const likedPosts = user.likedPosts
+            const dislikedPosts = user.dislikedPosts
+
+            if(likedPosts.includes(post.id.toString())) {
+                myStatus = "Like"
+            }
+            if(dislikedPosts.includes(post.id.toString())) {
+                myStatus = "Dislike"
+            }
+        } else {
+            myStatus = "None"
+        }
+        const postWithStatus = {
+            ...post,
+            extendedLikesInfo: {
+                likesCount: post.extendedLikesInfo.likesCount,
+                dislikesCount: post.extendedLikesInfo.dislikesCount,
+                myStatus: myStatus,
+                newestLikes: post.extendedLikesInfo.newestLikes.slice(0,3).map(like => {
+                    return {
+                        addedAt: like.addedAt,
+                        login: like.login,
+                        userId: like.userId
+                    };
+                })
+            }
+        }
+
+        res.status(200).send(postWithStatus)
     }
 
-    async createPost(req: RequestWithBody<CreatePostModel>, res: Response<OutputPostModel>) {
+    async createPost(req: RequestWithBody<CreatePostModel>, res: Response) {
         console.log('post on /posts')
 
         const title = req.body.title
@@ -76,8 +150,17 @@ class PostController {
         if (!createdPost) {
             res.sendStatus(400)
         }
+        const postWithStatus = {
+            ...createdPost,
+            extendedLikesInfo: {
+                likesCount: createdPost?.extendedLikesInfo!.likesCount,
+                dislikesCount: createdPost?.extendedLikesInfo!.dislikesCount,
+                myStatus: "None",
+                newestLikes: createdPost?.extendedLikesInfo.newestLikes
+            }
+        }
 
-        res.status(201).send(createdPost)
+        res.status(201).send(postWithStatus)
     }
 
     async updatePostById(req: RequestWithBodyAndParams<Params, any>, res: Response) {
@@ -204,6 +287,33 @@ class PostController {
         }
         res.status(201).send(commentWithStatus)
     }
+
+    async likePost(req: RequestWithBodyAndParams<{id: string}, {likeStatus: string}>, res: Response) {
+        console.log('put request | posts/:id/like-status')
+        const likeStatus = req.body.likeStatus
+        const accessToken = req.headers.authorization!.split(' ')[1]
+        const postId = req.params.id
+
+        if (!ObjectId.isValid(postId)) {
+            res.sendStatus(404)
+            return
+        }
+
+        const post = await PostRepository.getPostById(postId)
+
+        if (!post) {
+            res.sendStatus(404)
+            return
+        }
+        const statusPost = await PostRepository.likePost(postId, likeStatus, accessToken)
+        if(!statusPost) {
+            res.sendStatus(400)
+            return
+        }
+
+        res.sendStatus(204)
+        return
+    }
 }
 
 const postController = new PostController()
@@ -215,6 +325,7 @@ postRoute.get('/:id', postController.getPostById)
 postRoute.post('/', authMiddleware, postValidation(), postController.createPost)
 postRoute.put('/:id', authMiddleware, postValidation(), postController.updatePostById)
 postRoute.delete('/:id', authMiddleware, postController.deletePostById)
+postRoute.put('/:id/like-status', loginMiddleWare, likeStatusValidation(), postController.likePost)
 
 //comments
 postRoute.get('/:id/comments', postController.getAllComments)

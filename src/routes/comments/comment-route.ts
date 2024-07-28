@@ -151,10 +151,8 @@ class CommentController {
             res.sendStatus(404)
             return
         }
-        console.log('1')
 
         const comment = await CommentRepository.getCommentById(commentId)
-        console.log('1')
 
         if (!comment) {
             res.sendStatus(404)

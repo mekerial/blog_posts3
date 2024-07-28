@@ -8,7 +8,7 @@ import {
     QueryPostByBlogIdInputModel,
     UpdateBlogModel
 } from "../models/blogs/input";
-import {transformPostDB} from "../models/posts/mappers/mapper";
+import {transformPostDbWithMyStatus} from "../models/posts/mappers/mapper";
 import {blogModel, postModel} from "../db/db";
 import mongoose from 'mongoose';
 
@@ -29,7 +29,6 @@ export class BlogRepository {
                 }
             }
         }
-        console.log(blogModel)
         const blogs = await blogModel
             .find(filter)
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
@@ -48,7 +47,7 @@ export class BlogRepository {
             items: blogs.map(transformBlogDB)
         }
     }
-    static async getPostsByBlogId(blogId: string, sortData: QueryPostByBlogIdInputModel) {
+    static async getPostsByBlogId(blogId: string, sortData: QueryPostByBlogIdInputModel, accessToken: string | undefined) {
         const sortBy = sortData.sortBy ?? 'createdAt'
         const sortDirection = sortData.sortDirection ?? 'desc'
         const pageNumber = sortData.pageNumber ?? 1
@@ -59,18 +58,21 @@ export class BlogRepository {
             .sort({ [sortBy]: sortDirection === 'desc' ? -1 : 1 })
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
-            .lean()
+        let leanPosts = posts.map(function(model) { return model.toObject(); });
 
         const totalCount = await postModel
             .countDocuments({blogId: blogId})
 
         const pagesCount = Math.ceil(totalCount / +pageSize)
 
+        // @ts-ignore
+        const postsWithMyStatus = await transformPostDbWithMyStatus(leanPosts, accessToken)
+
         return {pagesCount,
             page: +pageNumber,
             pageSize: +pageSize,
             totalCount,
-            items: posts.map(transformPostDB)
+            items: postsWithMyStatus
         }
     }
     static async createPostToBlog(blogId: string, postData: CreatePostBlogModel) {

@@ -20,7 +20,10 @@ import {ObjectId} from "mongodb";
 import {PostRepository} from "../../repositories/post-repository";
 import {blogPostValidation} from "../../validators/blog-post-validator";
 import {CreatePostModel} from "../../models/posts/input";
-import {OutputPostModel} from "../../models/posts/output";
+import {jwtService} from "../../application/jwt-service";
+import mongoose from "mongoose";
+import {UserRepository} from "../../repositories/user-repository";
+import {userModel} from "../../db/db";
 
 class BlogsController {
     async getAllBlogs(req: RequestWithQuery<QueryBlogInputModel>, res: Response) {
@@ -62,6 +65,22 @@ class BlogsController {
         console.log('get on /blogs/:id/posts')
 
         const id = req.params.id
+        const accessToken = req.headers.authorization?.split(' ')[1]
+        let user
+        if(accessToken) {
+            const userId = await jwtService.getUserIdByAccessToken(accessToken)
+
+            if(!userId) {
+                console.log('not found user by token')
+            } else {
+                const mUserId = new mongoose.Types.ObjectId(userId)
+                req.user = await UserRepository.getUserById(userId)
+                if(!req.user) {
+                    console.log('user is null')
+                }
+                user = await userModel.findById(mUserId)
+            }
+        }
 
         if (!ObjectId.isValid(id)) {
             res.sendStatus(404)
@@ -80,12 +99,12 @@ class BlogsController {
             pageSize: req.query.pageSize
         }
 
-        const posts = await BlogRepository.getPostsByBlogId(id, sortData)
+        const posts = await BlogRepository.getPostsByBlogId(id, sortData, accessToken)
 
         res.send(posts)
     }
 
-    async createPostByBlog(req: RequestWithBodyAndParams<Params, CreatePostModel>, res: Response<OutputPostModel>) {
+    async createPostByBlog(req: RequestWithBodyAndParams<Params, CreatePostModel>, res: Response) {
         console.log('post on /blogs/:id/posts')
 
         const id = req.params.id
@@ -115,7 +134,17 @@ class BlogsController {
 
         const createdPost = await PostRepository.createPost({...newPost, blogId: id})
 
-        res.status(201).send(createdPost)
+        const postWithStatus = {
+            ...createdPost,
+            extendedLikesInfo: {
+                likesCount: createdPost?.extendedLikesInfo!.likesCount,
+                dislikesCount: createdPost?.extendedLikesInfo!.dislikesCount,
+                myStatus: "None",
+                newestLikes: createdPost?.extendedLikesInfo.newestLikes
+            }
+        }
+
+        res.status(201).send(postWithStatus)
     }
 
     async createBlog(req: RequestWithBody<CreateBlogModel>, res: Response) {

@@ -33,6 +33,8 @@ export type CreateUserWithHash = {
     },
     likedComments: string[]
     dislikedComments: string[]
+    likedPosts: string[]
+    dislikedPosts: string[]
 }
 
 export type QueryUserInputModel = {
