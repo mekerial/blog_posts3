@@ -100,8 +100,6 @@ export async function transformCommentDbWithMyStatus(value: {
         return commentsWithStatus
     }
 
-    console.log(accessToken)
-
 
     const commentsWithStatusNone = []
     for(let i = 0; i < value.length; i++){

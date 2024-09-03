@@ -51,7 +51,6 @@ export class UserRepository {
             .skip((pageNumber - 1) * pageSize)
             .limit(+pageSize)
             .lean()
-
         const totalCount = await userModel.countDocuments(filter)
 
         const pagesCount = Math.ceil(totalCount / +pageSize)

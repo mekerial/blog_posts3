@@ -1,6 +1,5 @@
 import {
     DBType,
-
 } from "../models/db/db-types";
 import {ObjectId} from "mongodb";
 import dotenv from "dotenv";
@@ -15,7 +14,6 @@ export const db: DBType = {
 }
 
 const uri = process.env.MONGO_URI // || 'mongodb://localhost:27017'
-
 if (!uri) {
     throw new Error(' ! uri error ! ')
 }
